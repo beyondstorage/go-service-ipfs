@@ -1,5 +1,5 @@
 /*
-Package ipfs provided support for ipfs.
+Package ipfs provided support for the InterPlanetary File System (IPFS).
 */
 package ipfs
 

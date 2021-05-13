@@ -1,5 +1,3 @@
-## How to create service that supports go-storage?
+# go-service-ipfs
 
-- Click [Use this template](https://github.com/aos-dev/go-service-example/generate) to generate a new project.
-- Update `service.toml` to match service ability.
-- Execute `make build` to generate and build project.
+The InterPlanetary File System (IPFS) support for [go-storage](https://github.com/aos-dev/go-storage)
