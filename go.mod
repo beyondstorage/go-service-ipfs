@@ -2,4 +2,7 @@ module github.com/beyondstorage/go-service-ipfs
 
 go 1.15
 
-require github.com/beyondstorage/go-storage/v4 v4.0.1-0.20210530044854-1c928ddbe52d
+require (
+	github.com/beyondstorage/go-storage/v4 v4.2.0
+	golang.org/x/tools v0.1.4 // indirect
+)
