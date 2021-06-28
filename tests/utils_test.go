@@ -15,7 +15,7 @@ func setupTest(t *testing.T) types.Storager {
 
 	store, err := ipfs.NewStorager(
 		pairs.WithName(os.Getenv("STORAGE_IPFS_NAME")),
-		pairs.WithEndpoint("STORAGE_IPFS_ENDPOINT"),
+		pairs.WithEndpoint(os.Getenv("STORAGE_IPFS_ENDPOINT")),
 		pairs.WithWorkDir("/"+uuid.New().String()+"/"),
 	)
 	if err != nil {

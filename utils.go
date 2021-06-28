@@ -48,7 +48,7 @@ func NewStorager(pairs ...types.Pair) (types.Storager, error) {
 	// @see https://beyondstorage.io/zh-CN/docs/go-storage/pairs/endpoint/
 	endpointParts := strings.SplitN(opt.Endpoint, ":", 2)
 	if len(endpointParts) < 2 {
-		return nil, errors.New("endpoint format error")
+		return nil, errors.New("endpoint format error: " + opt.Endpoint)
 	}
 	sh := ipfs.NewShell(endpointParts[1])
 	if !sh.IsUp() {
