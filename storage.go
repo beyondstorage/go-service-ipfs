@@ -91,12 +91,7 @@ func (s *Storage) list(ctx context.Context, path string, opt pairStorageList) (o
 		return
 	}
 
-	finish := false
 	nextFn := func(ctx context.Context, page *ObjectPage) error {
-		if finish {
-			return IterateDone
-		}
-
 		for _, f := range dir {
 			o := NewObject(s, true)
 			o.ID = f.Name
@@ -106,8 +101,7 @@ func (s *Storage) list(ctx context.Context, path string, opt pairStorageList) (o
 
 			page.Data = append(page.Data, o)
 		}
-		finish = true
-		return nil
+		return IterateDone
 	}
 
 	oi = NewObjectIterator(ctx, nextFn, nil)
