@@ -15,7 +15,17 @@ func (s *Storage) metadata(opt pairStorageMetadata) (meta *StorageMeta) {
 }
 
 func (s *Storage) create(path string, opt pairStorageCreate) (o *Object) {
-	panic("not implemented")
+	if opt.HasObjectMode && opt.ObjectMode.IsDir() {
+		path += "/"
+		o = NewObject(s, true)
+		o.Mode = ModeDir
+	} else {
+		o = NewObject(s, false)
+		o.Mode = ModeRead
+	}
+	o.ID = path
+	o.Path = path
+	return o
 }
 
 func (s *Storage) read(ctx context.Context, path string, w io.Writer, opt pairStorageRead) (n int64, err error) {
