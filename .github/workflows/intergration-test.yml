@@ -1,6 +1,6 @@
 name: "Integration Test"
 
-on: [push]
+on: [workflow_dispatch]
 
 jobs:
   integration_test:
