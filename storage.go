@@ -4,6 +4,8 @@ import (
 	"context"
 	"io"
 
+	ipfs "github.com/ipfs/go-ipfs-api"
+
 	. "github.com/beyondstorage/go-storage/v4/types"
 )
 
@@ -38,7 +40,13 @@ func (s *Storage) read(ctx context.Context, path string, w io.Writer, opt pairSt
 }
 
 func (s *Storage) write(ctx context.Context, path string, r io.Reader, size int64, opt pairStorageWrite) (n int64, err error) {
-	err = s.ipfs.FilesWrite(ctx, s.getAbsPath(path), r)
+	paramFunc := func(rb *ipfs.RequestBuilder) error {
+		rb.Option("create", true)
+		rb.Option("parents", true)
+		return nil
+	}
+
+	err = s.ipfs.FilesWrite(ctx, s.getAbsPath(path), r, paramFunc)
 	if err != nil {
 		return 0, err
 	}
