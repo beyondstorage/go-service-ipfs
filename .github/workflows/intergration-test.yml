@@ -1,0 +1,36 @@
+name: "Integration Test"
+
+on: [push]
+
+jobs:
+  integration_test:
+    name: "Integration Test"
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        go: [ "1.15", "1.16" ]
+        ipfs: ["0.8", "0.9"]
+
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up IPFS ${{ matrix.ipfs }}
+        uses: ibnesayeed/setup-ipfs@master
+        id: ipfs_setup
+        with:
+          ipfs_version: ${{ matrix.ipfs }}
+          run_daemon: true
+
+      - name: Test
+        env:
+          STORAGE_IPFS_INTEGRATION_TEST: ${{ secrets.STORAGE_INTEGRATION_TEST }}
+          STORAGE_IPFS_NAME: ${{ secrets.STORAGE_IPFS_NAME }}
+          STORAGE_IPFS_ENDPOINT: ${{ secrets.STORAGE_IPFS_ENDPOINT }}
+        run: make integration_test
