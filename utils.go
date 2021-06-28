@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/beyondstorage/go-storage/v4/services"
-
 	"github.com/beyondstorage/go-storage/v4/types"
 	ipfs "github.com/ipfs/go-ipfs-api"
 )
@@ -80,4 +79,9 @@ func (s *Storage) formatError(op string, err error, path ...string) error {
 		Storager: s,
 		Path:     path,
 	}
+}
+
+// getAbsPath will calculate object storage's abs path
+func (s *Storage) getAbsPath(path string) string {
+	return s.workDir + path
 }

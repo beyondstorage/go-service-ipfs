@@ -29,7 +29,7 @@ func (s *Storage) create(path string, opt pairStorageCreate) (o *Object) {
 }
 
 func (s *Storage) read(ctx context.Context, path string, w io.Writer, opt pairStorageRead) (n int64, err error) {
-	f, err := s.ipfs.FilesRead(ctx, path)
+	f, err := s.ipfs.FilesRead(ctx, s.getAbsPath(path))
 	if err != nil {
 		return 0, err
 	}
@@ -38,7 +38,7 @@ func (s *Storage) read(ctx context.Context, path string, w io.Writer, opt pairSt
 }
 
 func (s *Storage) write(ctx context.Context, path string, r io.Reader, size int64, opt pairStorageWrite) (n int64, err error) {
-	err = s.ipfs.FilesWrite(ctx, path, r)
+	err = s.ipfs.FilesWrite(ctx, s.getAbsPath(path), r)
 	if err != nil {
 		return 0, err
 	}
@@ -46,12 +46,12 @@ func (s *Storage) write(ctx context.Context, path string, r io.Reader, size int6
 }
 
 func (s *Storage) delete(ctx context.Context, path string, opt pairStorageDelete) (err error) {
-	err = s.ipfs.FilesRm(ctx, path, true)
+	err = s.ipfs.FilesRm(ctx, s.getAbsPath(path), true)
 	return
 }
 
 func (s *Storage) stat(ctx context.Context, path string, opt pairStorageStat) (o *Object, err error) {
-	stat, err := s.ipfs.FilesStat(ctx, path)
+	stat, err := s.ipfs.FilesStat(ctx, s.getAbsPath(path))
 	if err != nil {
 		return nil, err
 	}
