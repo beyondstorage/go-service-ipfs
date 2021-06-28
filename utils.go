@@ -65,6 +65,11 @@ func formatError(err error) error {
 		return err
 	}
 
+	switch err.Error() {
+	case "file does not exist":
+		return fmt.Errorf("%w: %v", services.ErrObjectNotExist, err)
+	}
+
 	return fmt.Errorf("%w: %v", services.ErrUnexpected, err)
 }
 

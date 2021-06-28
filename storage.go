@@ -54,7 +54,7 @@ func (s *Storage) write(ctx context.Context, path string, r io.Reader, size int6
 }
 
 func (s *Storage) delete(ctx context.Context, path string, opt pairStorageDelete) (err error) {
-	err = s.ipfs.FilesRm(ctx, s.getAbsPath(path), true)
+	err = s.ipfs.FilesRm(ctx, s.getAbsPath(path), false)
 	return
 }
 
@@ -104,6 +104,7 @@ func (s *Storage) list(ctx context.Context, path string, opt pairStorageList) (o
 
 			page.Data = append(page.Data, o)
 		}
+		finish = true
 		return nil
 	}
 
