@@ -1,2 +1,6 @@
 coverage.*
 bin/
+
+# IDE
+.idea
+.vscode
