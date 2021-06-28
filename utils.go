@@ -2,6 +2,7 @@ package ipfs
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/beyondstorage/go-storage/v4/types"
@@ -23,7 +24,10 @@ type Storage struct {
 
 // String implements Storager.String
 func (s *Storage) String() string {
-	panic("implement me")
+	return fmt.Sprintf(
+		"Storager IPFS {Name: %s, WorkDir: %s}",
+		s.name, s.workDir,
+	)
 }
 
 // NewStorager will create Storager only.
