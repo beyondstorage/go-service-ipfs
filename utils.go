@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/beyondstorage/go-storage/v4/services"
+
 	"github.com/beyondstorage/go-storage/v4/types"
 	ipfs "github.com/ipfs/go-ipfs-api"
 )
@@ -59,6 +61,23 @@ func NewStorager(pairs ...types.Pair) (types.Storager, error) {
 	return st, nil
 }
 
+func formatError(err error) error {
+	if _, ok := err.(services.InternalError); ok {
+		return err
+	}
+
+	return fmt.Errorf("%w: %v", services.ErrUnexpected, err)
+}
+
 func (s *Storage) formatError(op string, err error, path ...string) error {
-	panic("implement me")
+	if err == nil {
+		return nil
+	}
+
+	return services.StorageError{
+		Op:       op,
+		Err:      formatError(err),
+		Storager: s,
+		Path:     path,
+	}
 }
