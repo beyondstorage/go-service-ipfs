@@ -2,7 +2,10 @@ package ipfs
 
 import (
 	"context"
+	"fmt"
 	"io"
+
+	"github.com/beyondstorage/go-storage/v4/services"
 
 	. "github.com/beyondstorage/go-storage/v4/types"
 	ipfs "github.com/ipfs/go-ipfs-api"
@@ -85,22 +88,37 @@ func (s *Storage) stat(ctx context.Context, path string, opt pairStorageStat) (o
 }
 
 func (s *Storage) list(ctx context.Context, path string, opt pairStorageList) (oi *ObjectIterator, err error) {
-	dir, err := s.ipfs.FilesLs(ctx, path)
-	if err != nil {
-		return
-	}
+	var nextFn NextObjectFunc
 
-	nextFn := func(ctx context.Context, page *ObjectPage) error {
-		for _, f := range dir {
-			o := NewObject(s, true)
-			o.ID = f.Name
-			o.Path = f.Name
-			o.Mode |= ModeRead
-			o.SetContentLength(int64(f.Size))
+	switch {
+	case opt.ListMode.IsPart():
+	case opt.ListMode.IsDir():
+		nextFn = func(ctx context.Context, page *ObjectPage) error {
+			paramFunc := func(rb *ipfs.RequestBuilder) error {
+				rb.Option("long", true)
+				return nil
+			}
+			dir, err := s.ipfs.FilesLs(ctx, s.getAbsPath(path), paramFunc)
+			if err != nil {
+				return err
+			}
 
-			page.Data = append(page.Data, o)
+			for _, f := range dir {
+				fmt.Println(f)
+				o := NewObject(s, true)
+				o.ID = f.Name
+				o.Path = f.Name
+				o.Mode |= ModeRead
+				o.SetContentLength(int64(f.Size))
+
+				page.Data = append(page.Data, o)
+			}
+			return IterateDone
 		}
-		return IterateDone
+
+	case opt.ListMode.IsPrefix():
+	default:
+		return nil, services.ListModeInvalidError{Actual: opt.ListMode}
 	}
 
 	oi = NewObjectIterator(ctx, nextFn, nil)
