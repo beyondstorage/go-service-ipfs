@@ -4,6 +4,8 @@ import (
 	"context"
 	"io"
 
+	"github.com/beyondstorage/go-storage/v4/services"
+
 	. "github.com/beyondstorage/go-storage/v4/types"
 	ipfs "github.com/ipfs/go-ipfs-api"
 )
@@ -63,7 +65,7 @@ func (s *Storage) delete(ctx context.Context, path string, opt pairStorageDelete
 func (s *Storage) stat(ctx context.Context, path string, opt pairStorageStat) (o *Object, err error) {
 	stat, err := s.ipfs.FilesStat(ctx, s.getAbsPath(path))
 	if err != nil {
-		return nil, err
+		return nil, services.ErrObjectNotExist
 	}
 	o = NewObject(s, true)
 	o.ID = path
