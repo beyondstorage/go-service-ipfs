@@ -65,12 +65,14 @@ func formatError(err error) error {
 		return err
 	}
 
-	switch err.(type) {
-	case *ipfs.Error:
-		switch err.(*ipfs.Error).Message {
-		case "file does not exist":
-			return fmt.Errorf("%w: %v", services.ErrObjectNotExist, err)
-		}
+	e, ok := err.(*ipfs.Error)
+	if !ok {
+		return fmt.Errorf("%w: %v", services.ErrUnexpected, err)
+	}
+
+	switch e.Message {
+	case "file does not exist":
+		return fmt.Errorf("%w: %v", services.ErrObjectNotExist, err)
 	}
 
 	return fmt.Errorf("%w: %v", services.ErrUnexpected, err)
