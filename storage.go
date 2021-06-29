@@ -4,9 +4,8 @@ import (
 	"context"
 	"io"
 
-	ipfs "github.com/ipfs/go-ipfs-api"
-
 	. "github.com/beyondstorage/go-storage/v4/types"
+	ipfs "github.com/ipfs/go-ipfs-api"
 )
 
 func (s *Storage) metadata(opt pairStorageMetadata) (meta *StorageMeta) {
@@ -53,10 +52,11 @@ func (s *Storage) write(ctx context.Context, path string, r io.Reader, size int6
 	return size, nil
 }
 
-// TODO why the second delete call also should be success?
+// AOS-46: Idempotent Storager Delete Operation
+// @see https://github.com/beyondstorage/specs/blob/master/rfcs/46-idempotent-delete.md
 // TODO If a file is pinned by other nodes, there is no way to actually delete the file.
 func (s *Storage) delete(ctx context.Context, path string, opt pairStorageDelete) (err error) {
-	err = s.ipfs.FilesRm(ctx, s.getAbsPath(path), false)
+	err = s.ipfs.FilesRm(ctx, s.getAbsPath(path), true)
 	return
 }
 
