@@ -4,8 +4,6 @@ import (
 	"context"
 	"io"
 
-	"github.com/beyondstorage/go-storage/v4/services"
-
 	. "github.com/beyondstorage/go-storage/v4/types"
 	ipfs "github.com/ipfs/go-ipfs-api"
 )
@@ -56,7 +54,6 @@ func (s *Storage) write(ctx context.Context, path string, r io.Reader, size int6
 
 // AOS-46: Idempotent Storager Delete Operation
 // @see https://github.com/beyondstorage/specs/blob/master/rfcs/46-idempotent-delete.md
-// TODO If a file is pinned by other nodes, there is no way to actually delete the file.
 func (s *Storage) delete(ctx context.Context, path string, opt pairStorageDelete) (err error) {
 	err = s.ipfs.FilesRm(ctx, s.getAbsPath(path), true)
 	return
@@ -65,7 +62,7 @@ func (s *Storage) delete(ctx context.Context, path string, opt pairStorageDelete
 func (s *Storage) stat(ctx context.Context, path string, opt pairStorageStat) (o *Object, err error) {
 	stat, err := s.ipfs.FilesStat(ctx, s.getAbsPath(path))
 	if err != nil {
-		return nil, services.ErrObjectNotExist
+		return nil, err
 	}
 	o = NewObject(s, true)
 	o.ID = path
