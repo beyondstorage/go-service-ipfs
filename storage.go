@@ -2,11 +2,9 @@ package ipfs
 
 import (
 	"context"
-	"fmt"
 	"io"
 
 	"github.com/beyondstorage/go-storage/v4/services"
-
 	. "github.com/beyondstorage/go-storage/v4/types"
 	ipfs "github.com/ipfs/go-ipfs-api"
 )
@@ -104,7 +102,6 @@ func (s *Storage) list(ctx context.Context, path string, opt pairStorageList) (o
 			}
 
 			for _, f := range dir {
-				fmt.Println(f)
 				o := NewObject(s, true)
 				o.ID = f.Name
 				o.Path = f.Name
