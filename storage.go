@@ -113,10 +113,16 @@ func (s *Storage) stat(ctx context.Context, path string, opt pairStorageStat) (o
 	}
 	o.SetContentType(stat.Type)
 	o.SetContentLength(int64(stat.Size))
-	//o.SetContentMd5(stat.Hash) // TODO SHA-1 or SHA-256, not MD5
+
 	var sm ObjectSystemMetadata
-	// TODO copy ext metadata
+	sm.Hash = stat.Hash
+	sm.Blocks = stat.Blocks
+	sm.Local = stat.Local
+	sm.WithLocality = stat.WithLocality
+	sm.CumulativeSize = int(stat.CumulativeSize)
+	sm.SizeLocal = int(stat.SizeLocal)
 	o.SetSystemMetadata(sm)
+
 	return
 }
 

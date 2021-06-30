@@ -32,3 +32,21 @@ description = "set storage features"
 [pairs.default_storage_pairs]
 type = "DefaultStoragePairs"
 description = "set default pairs for storager actions"
+
+[infos.object.meta.size_local]
+type = "int"
+
+[infos.object.meta.hash]
+type = "string"
+
+[infos.object.meta.blocks]
+type = "int"
+
+[infos.object.meta.cumulative_size]
+type = "int"
+
+[infos.object.meta.local]
+type = "bool"
+
+[infos.object.meta.with_locality]
+type = "bool"

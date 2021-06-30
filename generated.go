@@ -25,6 +25,18 @@ const Type = "ipfs"
 //
 // Deprecated: Use ObjectSystemMetadata instead.
 type ObjectMetadata struct {
+    // Blocks 
+    Blocks int
+    // CumulativeSize 
+    CumulativeSize int
+    // Hash 
+    Hash string
+    // Local 
+    Local bool
+    // SizeLocal 
+    SizeLocal int
+    // WithLocality 
+    WithLocality bool
 }
 
 // GetObjectMetadata will get ObjectMetadata from Object.
@@ -52,6 +64,18 @@ func setObjectMetadata(o *Object, om ObjectMetadata) {
 
 // ObjectSystemMetadata stores system metadata for object.
 type ObjectSystemMetadata struct {
+    // Blocks 
+    Blocks int
+    // CumulativeSize 
+    CumulativeSize int
+    // Hash 
+    Hash string
+    // Local 
+    Local bool
+    // SizeLocal 
+    SizeLocal int
+    // WithLocality 
+    WithLocality bool
 }
 
 // GetObjectSystemMetadata will get ObjectSystemMetadata from Object.
