@@ -22,6 +22,8 @@ type Storage struct {
 	workDir string
 
 	types.UnimplementedStorager
+	types.UnimplementedCopier
+	types.UnimplementedMover
 }
 
 // String implements Storager.String
