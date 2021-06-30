@@ -2,13 +2,11 @@ package ipfs
 
 import (
 	"context"
-	"io"
-
-	ipfs "github.com/ipfs/go-ipfs-api"
-
 	"github.com/beyondstorage/go-storage/v4/pkg/iowrap"
 	"github.com/beyondstorage/go-storage/v4/services"
 	. "github.com/beyondstorage/go-storage/v4/types"
+	ipfs "github.com/ipfs/go-ipfs-api"
+	"io"
 )
 
 func (s *Storage) create(path string, opt pairStorageCreate) (o *Object) {
@@ -75,16 +73,13 @@ func (s *Storage) read(ctx context.Context, path string, w io.Writer, opt pairSt
 	if opt.HasSize {
 		fileOpts = append(fileOpts, ipfs.FilesRead.Count(opt.Size))
 	}
-
 	f, err := s.ipfs.FilesRead(ctx, s.getAbsPath(path), fileOpts...)
 	if err != nil {
 		return 0, err
 	}
-
 	if opt.HasIoCallback {
 		iowrap.CallbackReadCloser(f, opt.IoCallback)
 	}
-
 	return io.Copy(w, f)
 }
 
