@@ -24,7 +24,7 @@ func (s *Storage) create(path string, opt pairStorageCreate) (o *Object) {
 		o = NewObject(s, false)
 		o.Mode = ModeRead
 	}
-	o.ID = path
+	o.ID = s.getAbsPath(path)
 	o.Path = path
 	return o
 }
@@ -37,18 +37,20 @@ func (s *Storage) delete(ctx context.Context, path string, opt pairStorageDelete
 }
 
 func (s *Storage) list(ctx context.Context, path string, opt pairStorageList) (oi *ObjectIterator, err error) {
+	rp := s.getAbsPath(path)
+
 	var nextFn NextObjectFunc
 	switch {
 	case opt.ListMode.IsPart():
 	case opt.ListMode.IsDir():
 		nextFn = func(ctx context.Context, page *ObjectPage) error {
-			dir, err := s.ipfs.FilesLs(ctx, s.getAbsPath(path), ipfs.FilesLs.Stat(true))
+			dir, err := s.ipfs.FilesLs(ctx, rp, ipfs.FilesLs.Stat(true))
 			if err != nil {
 				return err
 			}
 			for _, f := range dir {
 				o := NewObject(s, true)
-				o.ID = f.Name
+				o.ID = rp + "/" + f.Name
 				o.Path = f.Name
 				o.Mode |= ModeRead
 				o.SetContentLength(int64(f.Size))
@@ -96,12 +98,13 @@ func (s *Storage) read(ctx context.Context, path string, w io.Writer, opt pairSt
 }
 
 func (s *Storage) stat(ctx context.Context, path string, opt pairStorageStat) (o *Object, err error) {
-	stat, err := s.ipfs.FilesStat(ctx, s.getAbsPath(path))
+	rp := s.getAbsPath(path)
+	stat, err := s.ipfs.FilesStat(ctx, rp)
 	if err != nil {
 		return nil, err
 	}
 	o = NewObject(s, true)
-	o.ID = path
+	o.ID = rp
 	o.Path = path
 	if opt.HasObjectMode && opt.ObjectMode.IsDir() {
 		o.Mode |= ModeDir
