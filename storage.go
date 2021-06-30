@@ -4,17 +4,11 @@ import (
 	"context"
 	"io"
 
+	ipfs "github.com/ipfs/go-ipfs-api"
+
 	"github.com/beyondstorage/go-storage/v4/services"
 	. "github.com/beyondstorage/go-storage/v4/types"
-	ipfs "github.com/ipfs/go-ipfs-api"
 )
-
-func (s *Storage) metadata(opt pairStorageMetadata) (meta *StorageMeta) {
-	meta = NewStorageMeta()
-	meta.Name = s.name
-	meta.WorkDir = s.workDir
-	return meta
-}
 
 func (s *Storage) create(path string, opt pairStorageCreate) (o *Object) {
 	if opt.HasObjectMode && opt.ObjectMode.IsDir() {
@@ -30,33 +24,58 @@ func (s *Storage) create(path string, opt pairStorageCreate) (o *Object) {
 	return o
 }
 
+// AOS-46: Idempotent Storager Delete Operation
+// @see https://github.com/beyondstorage/specs/blob/master/rfcs/46-idempotent-delete.md
+func (s *Storage) delete(ctx context.Context, path string, opt pairStorageDelete) (err error) {
+	err = s.ipfs.FilesRm(ctx, s.getAbsPath(path), true)
+	return
+}
+
+func (s *Storage) list(ctx context.Context, path string, opt pairStorageList) (oi *ObjectIterator, err error) {
+	var nextFn NextObjectFunc
+	switch {
+	case opt.ListMode.IsPart():
+	case opt.ListMode.IsDir():
+		nextFn = func(ctx context.Context, page *ObjectPage) error {
+			paramFunc := func(rb *ipfs.RequestBuilder) error {
+				rb.Option("long", true)
+				return nil
+			}
+			dir, err := s.ipfs.FilesLs(ctx, s.getAbsPath(path), paramFunc)
+			if err != nil {
+				return err
+			}
+			for _, f := range dir {
+				o := NewObject(s, true)
+				o.ID = f.Name
+				o.Path = f.Name
+				o.Mode |= ModeRead
+				o.SetContentLength(int64(f.Size))
+				page.Data = append(page.Data, o)
+			}
+			return IterateDone
+		}
+	case opt.ListMode.IsPrefix():
+	default:
+		return nil, services.ListModeInvalidError{Actual: opt.ListMode}
+	}
+	oi = NewObjectIterator(ctx, nextFn, nil)
+	return
+}
+
+func (s *Storage) metadata(opt pairStorageMetadata) (meta *StorageMeta) {
+	meta = NewStorageMeta()
+	meta.Name = s.name
+	meta.WorkDir = s.workDir
+	return meta
+}
+
 func (s *Storage) read(ctx context.Context, path string, w io.Writer, opt pairStorageRead) (n int64, err error) {
 	f, err := s.ipfs.FilesRead(ctx, s.getAbsPath(path))
 	if err != nil {
 		return 0, err
 	}
 	n, err = io.Copy(w, f)
-	return
-}
-
-func (s *Storage) write(ctx context.Context, path string, r io.Reader, size int64, opt pairStorageWrite) (n int64, err error) {
-	paramFunc := func(rb *ipfs.RequestBuilder) error {
-		rb.Option("create", true)
-		rb.Option("parents", true)
-		return nil
-	}
-
-	err = s.ipfs.FilesWrite(ctx, s.getAbsPath(path), r, paramFunc)
-	if err != nil {
-		return 0, err
-	}
-	return size, nil
-}
-
-// AOS-46: Idempotent Storager Delete Operation
-// @see https://github.com/beyondstorage/specs/blob/master/rfcs/46-idempotent-delete.md
-func (s *Storage) delete(ctx context.Context, path string, opt pairStorageDelete) (err error) {
-	err = s.ipfs.FilesRm(ctx, s.getAbsPath(path), true)
 	return
 }
 
@@ -73,51 +92,24 @@ func (s *Storage) stat(ctx context.Context, path string, opt pairStorageStat) (o
 	} else {
 		o.Mode |= ModeRead
 	}
-
 	o.SetContentType(stat.Type)
 	o.SetContentLength(int64(stat.Size))
 	//o.SetContentMd5(stat.Hash) // TODO SHA-1 or SHA-256, not MD5
-
 	var sm ObjectSystemMetadata
 	// TODO copy ext metadata
 	o.SetSystemMetadata(sm)
-
 	return
 }
 
-func (s *Storage) list(ctx context.Context, path string, opt pairStorageList) (oi *ObjectIterator, err error) {
-	var nextFn NextObjectFunc
-
-	switch {
-	case opt.ListMode.IsPart():
-	case opt.ListMode.IsDir():
-		nextFn = func(ctx context.Context, page *ObjectPage) error {
-			paramFunc := func(rb *ipfs.RequestBuilder) error {
-				rb.Option("long", true)
-				return nil
-			}
-			dir, err := s.ipfs.FilesLs(ctx, s.getAbsPath(path), paramFunc)
-			if err != nil {
-				return err
-			}
-
-			for _, f := range dir {
-				o := NewObject(s, true)
-				o.ID = f.Name
-				o.Path = f.Name
-				o.Mode |= ModeRead
-				o.SetContentLength(int64(f.Size))
-
-				page.Data = append(page.Data, o)
-			}
-			return IterateDone
-		}
-
-	case opt.ListMode.IsPrefix():
-	default:
-		return nil, services.ListModeInvalidError{Actual: opt.ListMode}
+func (s *Storage) write(ctx context.Context, path string, r io.Reader, size int64, opt pairStorageWrite) (n int64, err error) {
+	paramFunc := func(rb *ipfs.RequestBuilder) error {
+		rb.Option("create", true)
+		rb.Option("parents", true)
+		return nil
 	}
-
-	oi = NewObjectIterator(ctx, nextFn, nil)
-	return
+	err = s.ipfs.FilesWrite(ctx, s.getAbsPath(path), r, paramFunc)
+	if err != nil {
+		return 0, err
+	}
+	return size, nil
 }

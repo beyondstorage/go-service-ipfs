@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	ipfs "github.com/ipfs/go-ipfs-api"
+
 	"github.com/beyondstorage/go-storage/v4/services"
 	"github.com/beyondstorage/go-storage/v4/types"
-	ipfs "github.com/ipfs/go-ipfs-api"
 )
 
 // Storage is the example client.
