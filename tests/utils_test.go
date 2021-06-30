@@ -5,9 +5,10 @@ import (
 	"testing"
 
 	ipfs "github.com/beyondstorage/go-service-ipfs"
+	"github.com/google/uuid"
+
 	"github.com/beyondstorage/go-storage/v4/pairs"
 	"github.com/beyondstorage/go-storage/v4/types"
-	"github.com/google/uuid"
 )
 
 func setupTest(t *testing.T) types.Storager {

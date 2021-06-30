@@ -4,10 +4,9 @@ import (
 	"context"
 	"io"
 
-	"github.com/beyondstorage/go-storage/v4/pkg/iowrap"
-
 	ipfs "github.com/ipfs/go-ipfs-api"
 
+	"github.com/beyondstorage/go-storage/v4/pkg/iowrap"
 	"github.com/beyondstorage/go-storage/v4/services"
 	. "github.com/beyondstorage/go-storage/v4/types"
 )
