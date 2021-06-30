@@ -3,6 +3,7 @@ module github.com/beyondstorage/go-service-ipfs
 go 1.15
 
 require (
+	github.com/beyondstorage/go-endpoint v1.0.1 // indirect
 	github.com/beyondstorage/go-integration-test/v4 v4.1.1
 	github.com/beyondstorage/go-storage/v4 v4.2.0
 	github.com/btcsuite/btcd v0.22.0-beta // indirect

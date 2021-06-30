@@ -3,10 +3,10 @@ package ipfs
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	ipfs "github.com/ipfs/go-ipfs-api"
 
+	endpoint "github.com/beyondstorage/go-endpoint"
 	"github.com/beyondstorage/go-storage/v4/services"
 	"github.com/beyondstorage/go-storage/v4/types"
 )
@@ -49,12 +49,20 @@ func NewStorager(pairs ...types.Pair) (types.Storager, error) {
 		st.workDir = opt.WorkDir
 	}
 
-	// @see https://beyondstorage.io/zh-CN/docs/go-storage/pairs/endpoint/
-	endpointParts := strings.SplitN(opt.Endpoint, ":", 2)
-	if len(endpointParts) < 2 {
-		return nil, errors.New("endpoint format error: " + opt.Endpoint)
+	ep, err := endpoint.Parse(opt.Endpoint)
+	if err != nil {
+		return nil, err
 	}
-	sh := ipfs.NewShell(endpointParts[1])
+
+	e := "http://localhost:5001"
+	switch ep.Protocol() {
+	case endpoint.ProtocolHTTP:
+		e, _, _ = ep.HTTP()
+	case endpoint.ProtocolHTTPS:
+		e, _, _ = ep.HTTPS()
+	}
+
+	sh := ipfs.NewShell(e)
 	if !sh.IsUp() {
 		return nil, errors.New("ipfs not online")
 	}
