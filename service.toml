@@ -1,6 +1,7 @@
 name = "ipfs"
 
 [namespace.storage]
+implement = ["copier", "mover"]
 
 [namespace.storage.new]
 required = ["name", "endpoint"]

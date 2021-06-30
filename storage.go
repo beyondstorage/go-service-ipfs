@@ -2,12 +2,18 @@ package ipfs
 
 import (
 	"context"
+	"io"
+
+	ipfs "github.com/ipfs/go-ipfs-api"
+
 	"github.com/beyondstorage/go-storage/v4/pkg/iowrap"
 	"github.com/beyondstorage/go-storage/v4/services"
 	. "github.com/beyondstorage/go-storage/v4/types"
-	ipfs "github.com/ipfs/go-ipfs-api"
-	"io"
 )
+
+func (s *Storage) copy(ctx context.Context, src string, dst string, opt pairStorageCopy) (err error) {
+	return s.ipfs.FilesCp(ctx, s.getAbsPath(src), s.getAbsPath(dst))
+}
 
 func (s *Storage) create(path string, opt pairStorageCreate) (o *Object) {
 	if opt.HasObjectMode && opt.ObjectMode.IsDir() {
@@ -62,7 +68,13 @@ func (s *Storage) metadata(opt pairStorageMetadata) (meta *StorageMeta) {
 	meta = NewStorageMeta()
 	meta.Name = s.name
 	meta.WorkDir = s.workDir
+
+	// TODO: repo/stat to get total/used size
 	return meta
+}
+
+func (s *Storage) move(ctx context.Context, src string, dst string, opt pairStorageMove) (err error) {
+	return s.ipfs.FilesMv(ctx, s.getAbsPath(src), s.getAbsPath(dst))
 }
 
 func (s *Storage) read(ctx context.Context, path string, w io.Writer, opt pairStorageRead) (n int64, err error) {
