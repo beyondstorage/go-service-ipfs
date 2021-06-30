@@ -4,6 +4,8 @@ import (
 	"context"
 	"io"
 
+	"github.com/beyondstorage/go-storage/v4/pkg/iowrap"
+
 	ipfs "github.com/ipfs/go-ipfs-api"
 
 	"github.com/beyondstorage/go-storage/v4/services"
@@ -37,11 +39,7 @@ func (s *Storage) list(ctx context.Context, path string, opt pairStorageList) (o
 	case opt.ListMode.IsPart():
 	case opt.ListMode.IsDir():
 		nextFn = func(ctx context.Context, page *ObjectPage) error {
-			paramFunc := func(rb *ipfs.RequestBuilder) error {
-				rb.Option("long", true)
-				return nil
-			}
-			dir, err := s.ipfs.FilesLs(ctx, s.getAbsPath(path), paramFunc)
+			dir, err := s.ipfs.FilesLs(ctx, s.getAbsPath(path), ipfs.FilesLs.Stat(true))
 			if err != nil {
 				return err
 			}
@@ -71,12 +69,24 @@ func (s *Storage) metadata(opt pairStorageMetadata) (meta *StorageMeta) {
 }
 
 func (s *Storage) read(ctx context.Context, path string, w io.Writer, opt pairStorageRead) (n int64, err error) {
-	f, err := s.ipfs.FilesRead(ctx, s.getAbsPath(path))
+	fileOpts := make([]ipfs.FilesOpt, 0)
+	if opt.HasOffset {
+		fileOpts = append(fileOpts, ipfs.FilesRead.Offset(opt.Offset))
+	}
+	if opt.HasSize {
+		fileOpts = append(fileOpts, ipfs.FilesRead.Count(opt.Size))
+	}
+
+	f, err := s.ipfs.FilesRead(ctx, s.getAbsPath(path), fileOpts...)
 	if err != nil {
 		return 0, err
 	}
-	n, err = io.Copy(w, f)
-	return
+
+	if opt.HasIoCallback {
+		iowrap.CallbackReadCloser(f, opt.IoCallback)
+	}
+
+	return io.Copy(w, f)
 }
 
 func (s *Storage) stat(ctx context.Context, path string, opt pairStorageStat) (o *Object, err error) {
@@ -102,12 +112,11 @@ func (s *Storage) stat(ctx context.Context, path string, opt pairStorageStat) (o
 }
 
 func (s *Storage) write(ctx context.Context, path string, r io.Reader, size int64, opt pairStorageWrite) (n int64, err error) {
-	paramFunc := func(rb *ipfs.RequestBuilder) error {
-		rb.Option("create", true)
-		rb.Option("parents", true)
-		return nil
-	}
-	err = s.ipfs.FilesWrite(ctx, s.getAbsPath(path), r, paramFunc)
+	err = s.ipfs.FilesWrite(
+		ctx, s.getAbsPath(path), r,
+		ipfs.FilesWrite.Create(true),
+		ipfs.FilesWrite.Parents(true),
+	)
 	if err != nil {
 		return 0, err
 	}
