@@ -6,7 +6,7 @@ import (
 
 	ipfs "github.com/ipfs/go-ipfs-api"
 
-	endpoint "github.com/beyondstorage/go-endpoint"
+	"github.com/beyondstorage/go-endpoint"
 	"github.com/beyondstorage/go-storage/v4/services"
 	"github.com/beyondstorage/go-storage/v4/types"
 )
