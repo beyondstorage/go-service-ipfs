@@ -12,12 +12,6 @@ import (
 )
 
 func (s *Storage) copy(ctx context.Context, src string, dst string, opt pairStorageCopy) (err error) {
-	// The target file exists and must be deleted anyway
-	err = s.ipfs.FilesRm(ctx, s.getAbsPath(dst), true)
-	if err != nil {
-		return
-	}
-
 	return s.ipfs.FilesCp(ctx, s.getAbsPath(src), s.getAbsPath(dst))
 }
 
