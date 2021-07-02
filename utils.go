@@ -18,7 +18,6 @@ type Storage struct {
 	defaultPairs DefaultStoragePairs
 	features     StorageFeatures
 
-	name    string
 	workDir string
 
 	types.UnimplementedStorager
@@ -28,10 +27,7 @@ type Storage struct {
 
 // String implements Storager.String
 func (s *Storage) String() string {
-	return fmt.Sprintf(
-		"Storager IPFS {Name: %s, WorkDir: %s}",
-		s.name, s.workDir,
-	)
+	return fmt.Sprintf("Storager IPFS {WorkDir: %s}", s.workDir)
 }
 
 // NewStorager will create Storager only.
@@ -42,7 +38,6 @@ func NewStorager(pairs ...types.Pair) (types.Storager, error) {
 	}
 
 	st := &Storage{
-		name:    opt.Name,
 		workDir: "/",
 	}
 	if opt.HasWorkDir {

@@ -26,10 +26,6 @@ github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
 github.com/beyondstorage/go-endpoint v1.0.1 h1:F8x2dGLMu9je6g7zPbKoxCXDlug97K26SeCx7KEHgyg=
 github.com/beyondstorage/go-endpoint v1.0.1/go.mod h1:P2hknaGrziOJJKySv/XnAiVw/d3v12/LZu2gSxEx4nM=
-github.com/beyondstorage/go-integration-test/v4 v4.1.2-0.20210701052056-5bb9b7fc2207 h1:QDAxZKQ3x+Lv7zxczSkrpEUnSZsbUKSXnuECQj4hGGw=
-github.com/beyondstorage/go-integration-test/v4 v4.1.2-0.20210701052056-5bb9b7fc2207/go.mod h1:ihtCaOJvaHGE0v+IhY6ZUF5NU1IND6xmdrJI9Lq/jhc=
-github.com/beyondstorage/go-integration-test/v4 v4.1.2-0.20210701060503-17648abbe6bd h1:r6JG1MSwAgg8limOKFVtIK4V9XK6sTTqYCFkaCqx2+A=
-github.com/beyondstorage/go-integration-test/v4 v4.1.2-0.20210701060503-17648abbe6bd/go.mod h1:ihtCaOJvaHGE0v+IhY6ZUF5NU1IND6xmdrJI9Lq/jhc=
 github.com/beyondstorage/go-integration-test/v4 v4.1.2-0.20210701072246-3339bf2736ac h1:KsDnmAsd8JLau2NxiGAgkZGWjoYKnxc1kt0gabzBPLk=
 github.com/beyondstorage/go-integration-test/v4 v4.1.2-0.20210701072246-3339bf2736ac/go.mod h1:ihtCaOJvaHGE0v+IhY6ZUF5NU1IND6xmdrJI9Lq/jhc=
 github.com/beyondstorage/go-storage/v4 v4.2.0 h1:J0xqqy4qEQRtIS2zUWMA5wRXVHx/cxX5fHsU2ezA3+I=

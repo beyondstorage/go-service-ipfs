@@ -29,8 +29,8 @@ func (s *Storage) create(path string, opt pairStorageCreate) (o *Object) {
 	return o
 }
 
-// AOS-46: Idempotent Storager Delete Operation
-// @see https://github.com/beyondstorage/specs/blob/master/rfcs/46-idempotent-delete.md
+// GSP-46: Idempotent Storager Delete Operation
+// ref: https://github.com/beyondstorage/specs/blob/master/rfcs/46-idempotent-delete.md
 func (s *Storage) delete(ctx context.Context, path string, opt pairStorageDelete) (err error) {
 	err = s.ipfs.FilesRm(ctx, s.getAbsPath(path), true)
 	return
@@ -68,7 +68,6 @@ func (s *Storage) list(ctx context.Context, path string, opt pairStorageList) (o
 
 func (s *Storage) metadata(opt pairStorageMetadata) (meta *StorageMeta) {
 	meta = NewStorageMeta()
-	meta.Name = s.name
 	meta.WorkDir = s.workDir
 
 	// TODO: repo/stat to get total/used size

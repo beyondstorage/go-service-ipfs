@@ -4,7 +4,7 @@ name = "ipfs"
 implement = ["copier", "mover"]
 
 [namespace.storage.new]
-required = ["name", "endpoint"]
+required = ["endpoint"]
 optional = ["storage_features", "default_storage_pairs", "work_dir"]
 
 [namespace.storage.op.create]
