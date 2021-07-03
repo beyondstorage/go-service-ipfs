@@ -20,7 +20,6 @@ Set following environment variables:
 
 ```shell
 export STORAGE_IPFS_INTEGRATION_TEST=on
-export STORAGE_IPFS_NAME=ipfsnodename
 export STORAGE_IPFS_ENDPOINT=http:127.0.0.1:5001
 ```
 
