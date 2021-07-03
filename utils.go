@@ -3,6 +3,7 @@ package ipfs
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
 
 	ipfs "github.com/ipfs/go-ipfs-api"
 
@@ -99,5 +100,9 @@ func (s *Storage) formatError(op string, err error, path ...string) error {
 
 // getAbsPath will calculate object storage's abs path
 func (s *Storage) getAbsPath(path string) string {
+	if filepath.IsAbs(path) {
+		return path
+	}
+
 	return s.workDir + path
 }
