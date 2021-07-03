@@ -31,6 +31,5 @@ jobs:
       - name: Test
         env:
           STORAGE_IPFS_INTEGRATION_TEST: ${{ secrets.STORAGE_INTEGRATION_TEST }}
-          STORAGE_IPFS_NAME: ${{ secrets.STORAGE_IPFS_NAME }}
           STORAGE_IPFS_ENDPOINT: ${{ secrets.STORAGE_IPFS_ENDPOINT }}
         run: make integration_test
