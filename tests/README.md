@@ -5,7 +5,7 @@
 Copy example files and update corresponding values.
 
 ```shell
-cp Makefile.env.exmaple Makefile.env
+cp Makefile.env.example Makefile.env
 ```
 
 Run tests
