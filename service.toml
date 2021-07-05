@@ -33,20 +33,26 @@ description = "set storage features"
 type = "DefaultStoragePairs"
 description = "set default pairs for storager actions"
 
-[infos.object.meta.size_local]
-type = "int"
-
 [infos.object.meta.hash]
 type = "string"
+description = "the CID of the file or directory"
 
 [infos.object.meta.blocks]
 type = "int"
+description = "the number of files in the directory or the number of blocks that make up the file"
 
 [infos.object.meta.cumulative_size]
 type = "int"
+description = "the size of the DAGNodes making up the file in Bytes, or the sum of the sizes of all files in the directory"
 
 [infos.object.meta.local]
 type = "bool"
+description = "whether the file`s dags is fully present locally"
 
 [infos.object.meta.with_locality]
 type = "bool"
+description = "whether the locality information is present"
+
+[infos.object.meta.size_local]
+type = "int"
+description = "the cumulative size of the data present locally"

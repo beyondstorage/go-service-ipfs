@@ -25,17 +25,17 @@ const Type = "ipfs"
 //
 // Deprecated: Use ObjectSystemMetadata instead.
 type ObjectMetadata struct {
-	// Blocks
+	// Blocks the number of files in the directory or the number of blocks that make up the file
 	Blocks int
-	// CumulativeSize
+	// CumulativeSize the size of the DAGNodes making up the file in Bytes, or the sum of the sizes of all files in the directory
 	CumulativeSize int
-	// Hash
+	// Hash the CID of the file or directory
 	Hash string
-	// Local
+	// Local whether the file`s dags is fully present locally
 	Local bool
-	// SizeLocal
+	// SizeLocal the cumulative size of the data present locally
 	SizeLocal int
-	// WithLocality
+	// WithLocality whether the locality information is present
 	WithLocality bool
 }
 
@@ -64,17 +64,17 @@ func setObjectMetadata(o *Object, om ObjectMetadata) {
 
 // ObjectSystemMetadata stores system metadata for object.
 type ObjectSystemMetadata struct {
-	// Blocks
+	// Blocks the number of files in the directory or the number of blocks that make up the file
 	Blocks int
-	// CumulativeSize
+	// CumulativeSize the size of the DAGNodes making up the file in Bytes, or the sum of the sizes of all files in the directory
 	CumulativeSize int
-	// Hash
+	// Hash the CID of the file or directory
 	Hash string
-	// Local
+	// Local whether the file`s dags is fully present locally
 	Local bool
-	// SizeLocal
+	// SizeLocal the cumulative size of the data present locally
 	SizeLocal int
-	// WithLocality
+	// WithLocality whether the locality information is present
 	WithLocality bool
 }
 
