@@ -3,13 +3,15 @@ package ipfs
 import (
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 
-	ipfs "github.com/ipfs/go-ipfs-api"
+	cmds "github.com/ipfs/go-ipfs-cmds"
 
 	"github.com/beyondstorage/go-endpoint"
 	"github.com/beyondstorage/go-storage/v4/services"
 	"github.com/beyondstorage/go-storage/v4/types"
+	ipfs "github.com/ipfs/go-ipfs-api"
 )
 
 // Storage is the example client.
@@ -78,8 +80,20 @@ func formatError(err error) error {
 	}
 
 	switch e.Message {
-	case "file does not exist":
+	case "file does not exist", os.ErrNotExist.Error():
 		return fmt.Errorf("%w: %v", services.ErrObjectNotExist, err)
+	case "internal error":
+		return fmt.Errorf("%w: %v", services.ErrServiceInternal, err)
+	case "rate limited":
+		return fmt.Errorf("%w: %v", services.ErrRequestThrottled, err)
+	}
+
+	// ref: https://github.com/ipfs/go-ipfs-cmds/blob/4ade007405e5d3befb14184290576c63cc43a6a3/error.go#L31
+	switch e.Code {
+	case int(cmds.ErrRateLimited):
+		return fmt.Errorf("%w: %v", services.ErrRequestThrottled, err)
+	case int(cmds.ErrImplementation):
+		return fmt.Errorf("%w: %v", services.ErrServiceInternal, err)
 	}
 
 	return fmt.Errorf("%w: %v", services.ErrUnexpected, err)
