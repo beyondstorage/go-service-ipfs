@@ -11,6 +11,10 @@ import (
 	. "github.com/beyondstorage/go-storage/v4/types"
 )
 
+// The src of `ipfs files cp` supports both `IPFS-path` and `MFS-path`
+// After `s.getAbsPath(src)`, if the absolute path matches `IPFS-path`, it will take precedence
+// This means that if the `workDir` is `/ipfs/`, there is a high probability that an error will be returned
+// See https://github.com/beyondstorage/specs/pull/134#discussion_r663594807 for more details
 func (s *Storage) copy(ctx context.Context, src string, dst string, opt pairStorageCopy) (err error) {
 	return s.ipfs.FilesCp(ctx, s.getAbsPath(src), s.getAbsPath(dst))
 }
@@ -130,6 +134,7 @@ func (s *Storage) write(ctx context.Context, path string, r io.Reader, size int6
 		ctx, s.getAbsPath(path), r,
 		ipfs.FilesWrite.Create(true),
 		ipfs.FilesWrite.Parents(true),
+		ipfs.FilesWrite.Truncate(true),
 	)
 	if err != nil {
 		return 0, err
