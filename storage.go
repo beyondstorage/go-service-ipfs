@@ -106,7 +106,7 @@ func (s *Storage) read(ctx context.Context, path string, w io.Writer, opt pairSt
 
 func (s *Storage) stat(ctx context.Context, path string, opt pairStorageStat) (o *Object, err error) {
 	rp := s.getAbsPath(path)
-	stat, err := s.ipfs.FilesStat(ctx, rp)
+	stat, err := s.ipfs.FilesStat(ctx, rp, ipfs.FilesStat.WithLocal(true))
 	if err != nil {
 		return nil, err
 	}
