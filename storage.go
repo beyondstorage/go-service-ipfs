@@ -126,8 +126,8 @@ func (s *Storage) stat(ctx context.Context, path string, opt pairStorageStat) (o
 	sm.Blocks = stat.Blocks
 	sm.Local = stat.Local
 	sm.WithLocality = stat.WithLocality
-	sm.CumulativeSize = int(stat.CumulativeSize)
-	sm.SizeLocal = int(stat.SizeLocal)
+	sm.CumulativeSize = stat.CumulativeSize
+	sm.SizeLocal = stat.SizeLocal
 	o.SetSystemMetadata(sm)
 
 	return

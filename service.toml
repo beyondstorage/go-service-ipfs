@@ -42,7 +42,7 @@ type = "int"
 description = "the number of files in the directory or the number of blocks that make up the file"
 
 [infos.object.meta.cumulative_size]
-type = "int"
+type = "uint64"
 description = "the size of the DAGNodes making up the file in Bytes, or the sum of the sizes of all files in the directory"
 
 [infos.object.meta.local]
@@ -54,5 +54,5 @@ type = "bool"
 description = "whether the locality information is present"
 
 [infos.object.meta.size_local]
-type = "int"
+type = "uint64"
 description = "the cumulative size of the data present locally"

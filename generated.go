@@ -28,13 +28,13 @@ type ObjectMetadata struct {
 	// Blocks the number of files in the directory or the number of blocks that make up the file
 	Blocks int
 	// CumulativeSize the size of the DAGNodes making up the file in Bytes, or the sum of the sizes of all files in the directory
-	CumulativeSize int
+	CumulativeSize uint64
 	// Hash the CID of the file or directory
 	Hash string
 	// Local whether the file`s dags is fully present locally
 	Local bool
 	// SizeLocal the cumulative size of the data present locally
-	SizeLocal int
+	SizeLocal uint64
 	// WithLocality whether the locality information is present
 	WithLocality bool
 }
@@ -67,13 +67,13 @@ type ObjectSystemMetadata struct {
 	// Blocks the number of files in the directory or the number of blocks that make up the file
 	Blocks int
 	// CumulativeSize the size of the DAGNodes making up the file in Bytes, or the sum of the sizes of all files in the directory
-	CumulativeSize int
+	CumulativeSize uint64
 	// Hash the CID of the file or directory
 	Hash string
 	// Local whether the file`s dags is fully present locally
 	Local bool
 	// SizeLocal the cumulative size of the data present locally
-	SizeLocal int
+	SizeLocal uint64
 	// WithLocality whether the locality information is present
 	WithLocality bool
 }
