@@ -43,38 +43,42 @@ func (s *Storage) delete(ctx context.Context, path string, opt pairStorageDelete
 func (s *Storage) list(ctx context.Context, path string, opt pairStorageList) (oi *ObjectIterator, err error) {
 	rp := s.getAbsPath(path)
 
-	var nextFn NextObjectFunc
-	switch {
-	case opt.ListMode.IsPart():
-	case opt.ListMode.IsDir():
-		nextFn = func(ctx context.Context, page *ObjectPage) error {
+	if opt.ListMode.IsDir() {
+		nextFn := func(ctx context.Context, page *ObjectPage) error {
 			dir, err := s.ipfs.FilesLs(ctx, rp, ipfs.FilesLs.Stat(true))
 			if err != nil {
 				return err
 			}
 			for _, f := range dir {
 				o := NewObject(s, true)
-				o.ID = rp + "/" + f.Name
+				o.ID = f.Hash
 				o.Path = f.Name
-				o.Mode |= ModeRead
+
+				switch f.Type {
+				case ipfs.TFile:
+					o.Mode |= ModeRead
+				case ipfs.TDirectory:
+					o.Mode |= ModeDir
+				case ipfs.TSymlink:
+					// TODO: To be verified
+					o.Mode |= ModeLink
+				}
+
 				o.SetContentLength(int64(f.Size))
 				page.Data = append(page.Data, o)
 			}
 			return IterateDone
 		}
-	case opt.ListMode.IsPrefix():
-	default:
+		oi = NewObjectIterator(ctx, nextFn, nil)
+		return
+	} else {
 		return nil, services.ListModeInvalidError{Actual: opt.ListMode}
 	}
-	oi = NewObjectIterator(ctx, nextFn, nil)
-	return
 }
 
 func (s *Storage) metadata(opt pairStorageMetadata) (meta *StorageMeta) {
 	meta = NewStorageMeta()
 	meta.WorkDir = s.workDir
-
-	// TODO: repo/stat to get total/used size
 	return meta
 }
 
@@ -107,7 +111,7 @@ func (s *Storage) stat(ctx context.Context, path string, opt pairStorageStat) (o
 		return nil, err
 	}
 	o = NewObject(s, true)
-	o.ID = rp
+	o.ID = stat.Hash
 	o.Path = path
 	if opt.HasObjectMode && opt.ObjectMode.IsDir() {
 		o.Mode |= ModeDir
