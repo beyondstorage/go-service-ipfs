@@ -6,12 +6,12 @@ import (
 	"os"
 	"path/filepath"
 
+	ipfs "github.com/ipfs/go-ipfs-api"
 	cmds "github.com/ipfs/go-ipfs-cmds"
 
 	"github.com/beyondstorage/go-endpoint"
 	"github.com/beyondstorage/go-storage/v4/services"
 	"github.com/beyondstorage/go-storage/v4/types"
-	ipfs "github.com/ipfs/go-ipfs-api"
 )
 
 // Storage is the example client.
