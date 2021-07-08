@@ -10,6 +10,7 @@ import (
 	cmds "github.com/ipfs/go-ipfs-cmds"
 
 	"github.com/beyondstorage/go-endpoint"
+	ps "github.com/beyondstorage/go-storage/v4/pairs"
 	"github.com/beyondstorage/go-storage/v4/services"
 	"github.com/beyondstorage/go-storage/v4/types"
 )
@@ -59,7 +60,7 @@ func NewStorager(pairs ...types.Pair) (types.Storager, error) {
 	case endpoint.ProtocolHTTPS:
 		e, _, _ = ep.HTTPS()
 	default:
-		return nil, errors.New("protocol not supported")
+		return nil, services.PairUnsupportedError{Pair: ps.WithEndpoint(opt.Endpoint)}
 	}
 
 	sh := ipfs.NewShell(e)
