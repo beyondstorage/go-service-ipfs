@@ -80,12 +80,8 @@ func formatError(err error) error {
 	}
 
 	switch e.Message {
-	case "file does not exist", os.ErrNotExist.Error():
+	case os.ErrNotExist.Error():
 		return fmt.Errorf("%w: %v", services.ErrObjectNotExist, err)
-	case "internal error":
-		return fmt.Errorf("%w: %v", services.ErrServiceInternal, err)
-	case "rate limited":
-		return fmt.Errorf("%w: %v", services.ErrRequestThrottled, err)
 	}
 
 	// ref: https://github.com/ipfs/go-ipfs-cmds/blob/4ade007405e5d3befb14184290576c63cc43a6a3/error.go#L31
