@@ -59,9 +59,6 @@ func (s *Storage) list(ctx context.Context, path string, opt pairStorageList) (o
 					o.Mode |= ModeRead
 				case ipfs.TDirectory:
 					o.Mode |= ModeDir
-				case ipfs.TSymlink:
-					// TODO: To be verified
-					o.Mode |= ModeLink
 				}
 
 				o.SetContentLength(int64(f.Size))
