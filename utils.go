@@ -52,12 +52,14 @@ func NewStorager(pairs ...types.Pair) (types.Storager, error) {
 		return nil, err
 	}
 
-	e := "http://localhost:5001"
+	var e string
 	switch ep.Protocol() {
 	case endpoint.ProtocolHTTP:
 		e, _, _ = ep.HTTP()
 	case endpoint.ProtocolHTTPS:
 		e, _, _ = ep.HTTPS()
+	default:
+		return nil, errors.New("protocol not supported")
 	}
 
 	sh := ipfs.NewShell(e)
