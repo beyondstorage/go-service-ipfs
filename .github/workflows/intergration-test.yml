@@ -1,6 +1,9 @@
 name: "Integration Test"
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request_target:
+    types: [labeled]
 
 jobs:
   integration_test:
