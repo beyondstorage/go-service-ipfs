@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set up IPFS ${{ matrix.ipfs }}
-        uses: ibnesayeed/setup-ipfs@0.6.0
+        uses: ibnesayeed/setup-ipfs@f84d4bdcdb4e5ff7d6bc4c6cb28f117584a50538
         id: ipfs_setup
         with:
           ipfs_version: ${{ matrix.ipfs }}
