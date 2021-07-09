@@ -25,6 +25,18 @@ const Type = "ipfs"
 //
 // Deprecated: Use ObjectSystemMetadata instead.
 type ObjectMetadata struct {
+	// Blocks the number of files in the directory or the number of blocks that make up the file
+	Blocks int
+	// CumulativeSize the size of the DAGNodes making up the file in Bytes, or the sum of the sizes of all files in the directory
+	CumulativeSize uint64
+	// Hash the CID of the file or directory
+	Hash string
+	// Local whether the file`s dags is fully present locally
+	Local bool
+	// SizeLocal the cumulative size of the data present locally
+	SizeLocal uint64
+	// WithLocality whether the locality information is present
+	WithLocality bool
 }
 
 // GetObjectMetadata will get ObjectMetadata from Object.
@@ -52,6 +64,18 @@ func setObjectMetadata(o *Object, om ObjectMetadata) {
 
 // ObjectSystemMetadata stores system metadata for object.
 type ObjectSystemMetadata struct {
+	// Blocks the number of files in the directory or the number of blocks that make up the file
+	Blocks int
+	// CumulativeSize the size of the DAGNodes making up the file in Bytes, or the sum of the sizes of all files in the directory
+	CumulativeSize uint64
+	// Hash the CID of the file or directory
+	Hash string
+	// Local whether the file`s dags is fully present locally
+	Local bool
+	// SizeLocal the cumulative size of the data present locally
+	SizeLocal uint64
+	// WithLocality whether the locality information is present
+	WithLocality bool
 }
 
 // GetObjectSystemMetadata will get ObjectSystemMetadata from Object.
@@ -95,33 +119,59 @@ func setStorageSystemMetadata(s *StorageMeta, sm StorageSystemMetadata) {
 	s.SetSystemMetadata(sm)
 }
 
+// WithDefaultStoragePairs will apply default_storage_pairs value to Options.
+//
+// DefaultStoragePairs set default pairs for storager actions
+func WithDefaultStoragePairs(v DefaultStoragePairs) Pair {
+	return Pair{
+		Key:   "default_storage_pairs",
+		Value: v,
+	}
+}
+
+// WithStorageFeatures will apply storage_features value to Options.
+//
+// StorageFeatures set storage features
+func WithStorageFeatures(v StorageFeatures) Pair {
+	return Pair{
+		Key:   "storage_features",
+		Value: v,
+	}
+}
+
 var pairMap = map[string]string{
-	"content_md5":         "string",
-	"content_type":        "string",
-	"context":             "context.Context",
-	"continuation_token":  "string",
-	"credential":          "string",
-	"endpoint":            "string",
-	"expire":              "int",
-	"http_client_options": "*httpclient.Options",
-	"interceptor":         "Interceptor",
-	"io_callback":         "func([]byte)",
-	"list_mode":           "ListMode",
-	"location":            "string",
-	"multipart_id":        "string",
-	"name":                "string",
-	"object_mode":         "ObjectMode",
-	"offset":              "int64",
-	"size":                "int64",
-	"work_dir":            "string",
+	"content_md5":           "string",
+	"content_type":          "string",
+	"context":               "context.Context",
+	"continuation_token":    "string",
+	"credential":            "string",
+	"default_storage_pairs": "DefaultStoragePairs",
+	"endpoint":              "string",
+	"expire":                "int",
+	"http_client_options":   "*httpclient.Options",
+	"interceptor":           "Interceptor",
+	"io_callback":           "func([]byte)",
+	"list_mode":             "ListMode",
+	"location":              "string",
+	"multipart_id":          "string",
+	"name":                  "string",
+	"object_mode":           "ObjectMode",
+	"offset":                "int64",
+	"size":                  "int64",
+	"storage_features":      "StorageFeatures",
+	"work_dir":              "string",
 }
 var (
+	_ Copier   = &Storage{}
+	_ Mover    = &Storage{}
 	_ Storager = &Storage{}
 )
 
 type StorageFeatures struct {
 	// Deprecated: This field has been deprecated by GSP-109, planned be removed in v4.3.0.
 	LooseOperationAll bool
+	// Deprecated: This field has been deprecated by GSP-109, planned be removed in v4.3.0.
+	LooseOperationCopy bool
 	// Deprecated: This field has been deprecated by GSP-109, planned be removed in v4.3.0.
 	LooseOperationCreate bool
 	// Deprecated: This field has been deprecated by GSP-109, planned be removed in v4.3.0.
@@ -130,6 +180,8 @@ type StorageFeatures struct {
 	LooseOperationList bool
 	// Deprecated: This field has been deprecated by GSP-109, planned be removed in v4.3.0.
 	LooseOperationMetadata bool
+	// Deprecated: This field has been deprecated by GSP-109, planned be removed in v4.3.0.
+	LooseOperationMove bool
 	// Deprecated: This field has been deprecated by GSP-109, planned be removed in v4.3.0.
 	LooseOperationRead bool
 	// Deprecated: This field has been deprecated by GSP-109, planned be removed in v4.3.0.
@@ -149,7 +201,15 @@ type pairStorageNew struct {
 	pairs []Pair
 
 	// Required pairs
+	HasEndpoint bool
+	Endpoint    string
 	// Optional pairs
+	HasDefaultStoragePairs bool
+	DefaultStoragePairs    DefaultStoragePairs
+	HasStorageFeatures     bool
+	StorageFeatures        StorageFeatures
+	HasWorkDir             bool
+	WorkDir                string
 }
 
 // parsePairStorageNew will parse Pair slice into *pairStorageNew
@@ -161,8 +221,35 @@ func parsePairStorageNew(opts []Pair) (pairStorageNew, error) {
 	for _, v := range opts {
 		switch v.Key {
 		// Required pairs
+		case "endpoint":
+			if result.HasEndpoint {
+				continue
+			}
+			result.HasEndpoint = true
+			result.Endpoint = v.Value.(string)
 		// Optional pairs
+		case "default_storage_pairs":
+			if result.HasDefaultStoragePairs {
+				continue
+			}
+			result.HasDefaultStoragePairs = true
+			result.DefaultStoragePairs = v.Value.(DefaultStoragePairs)
+		case "storage_features":
+			if result.HasStorageFeatures {
+				continue
+			}
+			result.HasStorageFeatures = true
+			result.StorageFeatures = v.Value.(StorageFeatures)
+		case "work_dir":
+			if result.HasWorkDir {
+				continue
+			}
+			result.HasWorkDir = true
+			result.WorkDir = v.Value.(string)
 		}
+	}
+	if !result.HasEndpoint {
+		return pairStorageNew{}, services.PairRequiredError{Keys: []string{"endpoint"}}
 	}
 
 	return result, nil
@@ -170,13 +257,38 @@ func parsePairStorageNew(opts []Pair) (pairStorageNew, error) {
 
 // DefaultStoragePairs is default pairs for specific action
 type DefaultStoragePairs struct {
+	Copy     []Pair
 	Create   []Pair
 	Delete   []Pair
 	List     []Pair
 	Metadata []Pair
+	Move     []Pair
 	Read     []Pair
 	Stat     []Pair
 	Write    []Pair
+}
+
+// pairStorageCopy is the parsed struct
+type pairStorageCopy struct {
+	pairs []Pair
+}
+
+// parsePairStorageCopy will parse Pair slice into *pairStorageCopy
+func (s *Storage) parsePairStorageCopy(opts []Pair) (pairStorageCopy, error) {
+	result := pairStorageCopy{
+		pairs: opts,
+	}
+
+	for _, v := range opts {
+		switch v.Key {
+		default:
+			return pairStorageCopy{}, services.PairUnsupportedError{Pair: v}
+		}
+	}
+
+	// Check required pairs.
+
+	return result, nil
 }
 
 // pairStorageCreate is the parsed struct
@@ -290,6 +402,29 @@ func (s *Storage) parsePairStorageMetadata(opts []Pair) (pairStorageMetadata, er
 		switch v.Key {
 		default:
 			return pairStorageMetadata{}, services.PairUnsupportedError{Pair: v}
+		}
+	}
+
+	// Check required pairs.
+
+	return result, nil
+}
+
+// pairStorageMove is the parsed struct
+type pairStorageMove struct {
+	pairs []Pair
+}
+
+// parsePairStorageMove will parse Pair slice into *pairStorageMove
+func (s *Storage) parsePairStorageMove(opts []Pair) (pairStorageMove, error) {
+	result := pairStorageMove{
+		pairs: opts,
+	}
+
+	for _, v := range opts {
+		switch v.Key {
+		default:
+			return pairStorageMove{}, services.PairUnsupportedError{Pair: v}
 		}
 	}
 
@@ -430,6 +565,31 @@ func (s *Storage) parsePairStorageWrite(opts []Pair) (pairStorageWrite, error) {
 	return result, nil
 }
 
+// Copy will copy an Object or multiple object in the service.
+//
+// This function will create a context by default.
+func (s *Storage) Copy(src string, dst string, pairs ...Pair) (err error) {
+	ctx := context.Background()
+	return s.CopyWithContext(ctx, src, dst, pairs...)
+}
+
+// CopyWithContext will copy an Object or multiple object in the service.
+func (s *Storage) CopyWithContext(ctx context.Context, src string, dst string, pairs ...Pair) (err error) {
+	defer func() {
+		err = s.formatError("copy", err, src, dst)
+	}()
+
+	pairs = append(pairs, s.defaultPairs.Copy...)
+	var opt pairStorageCopy
+
+	opt, err = s.parsePairStorageCopy(pairs)
+	if err != nil {
+		return
+	}
+
+	return s.copy(ctx, src, dst, opt)
+}
+
 // Create will create a new object without any api call.
 //
 // ## Behavior
@@ -529,6 +689,31 @@ func (s *Storage) Metadata(pairs ...Pair) (meta *StorageMeta) {
 	opt, _ = s.parsePairStorageMetadata(pairs)
 
 	return s.metadata(opt)
+}
+
+// Move will move an object in the service.
+//
+// This function will create a context by default.
+func (s *Storage) Move(src string, dst string, pairs ...Pair) (err error) {
+	ctx := context.Background()
+	return s.MoveWithContext(ctx, src, dst, pairs...)
+}
+
+// MoveWithContext will move an object in the service.
+func (s *Storage) MoveWithContext(ctx context.Context, src string, dst string, pairs ...Pair) (err error) {
+	defer func() {
+		err = s.formatError("move", err, src, dst)
+	}()
+
+	pairs = append(pairs, s.defaultPairs.Move...)
+	var opt pairStorageMove
+
+	opt, err = s.parsePairStorageMove(pairs)
+	if err != nil {
+		return
+	}
+
+	return s.move(ctx, src, dst, opt)
 }
 
 // Read will read the file's data.

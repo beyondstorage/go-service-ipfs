@@ -4,33 +4,141 @@ import (
 	"context"
 	"io"
 
+	ipfs "github.com/ipfs/go-ipfs-api"
+
+	"github.com/beyondstorage/go-storage/v4/pkg/iowrap"
+	"github.com/beyondstorage/go-storage/v4/services"
 	. "github.com/beyondstorage/go-storage/v4/types"
 )
 
-func (s *Storage) create(path string, opt pairStorageCreate) (o *Object) {
-	panic("not implemented")
+// The src of `ipfs files cp` supports both `IPFS-path` and `MFS-path`
+// After `s.getAbsPath(src)`, if the absolute path matches `IPFS-path`, it will take precedence
+// This means that if the `workDir` is `/ipfs/`, there is a high probability that an error will be returned
+// See https://github.com/beyondstorage/specs/pull/134#discussion_r663594807 for more details
+func (s *Storage) copy(ctx context.Context, src string, dst string, opt pairStorageCopy) (err error) {
+	return s.ipfs.FilesCp(ctx, s.getAbsPath(src), s.getAbsPath(dst))
 }
 
+func (s *Storage) create(path string, opt pairStorageCreate) (o *Object) {
+	if opt.HasObjectMode && opt.ObjectMode.IsDir() {
+		path += "/"
+		o = NewObject(s, true)
+		o.Mode = ModeDir
+	} else {
+		o = NewObject(s, false)
+		o.Mode = ModeRead
+	}
+	o.ID = s.getAbsPath(path)
+	o.Path = path
+	return o
+}
+
+// GSP-46: Idempotent Storager Delete Operation
+// ref: https://github.com/beyondstorage/specs/blob/master/rfcs/46-idempotent-delete.md
 func (s *Storage) delete(ctx context.Context, path string, opt pairStorageDelete) (err error) {
-	panic("not implemented")
+	err = s.ipfs.FilesRm(ctx, s.getAbsPath(path), true)
+	return
 }
 
 func (s *Storage) list(ctx context.Context, path string, opt pairStorageList) (oi *ObjectIterator, err error) {
-	panic("not implemented")
+	rp := s.getAbsPath(path)
+
+	if opt.ListMode.IsDir() {
+		nextFn := func(ctx context.Context, page *ObjectPage) error {
+			dir, err := s.ipfs.FilesLs(ctx, rp, ipfs.FilesLs.Stat(true))
+			if err != nil {
+				return err
+			}
+			for _, f := range dir {
+				o := NewObject(s, true)
+				o.ID = f.Hash
+				o.Path = f.Name
+
+				switch f.Type {
+				case ipfs.TFile:
+					o.Mode |= ModeRead
+				case ipfs.TDirectory:
+					o.Mode |= ModeDir
+				}
+
+				o.SetContentLength(int64(f.Size))
+				page.Data = append(page.Data, o)
+			}
+			return IterateDone
+		}
+		oi = NewObjectIterator(ctx, nextFn, nil)
+		return
+	} else {
+		return nil, services.ListModeInvalidError{Actual: opt.ListMode}
+	}
 }
 
 func (s *Storage) metadata(opt pairStorageMetadata) (meta *StorageMeta) {
-	panic("not implemented")
+	meta = NewStorageMeta()
+	meta.WorkDir = s.workDir
+	return meta
+}
+
+func (s *Storage) move(ctx context.Context, src string, dst string, opt pairStorageMove) (err error) {
+	return s.ipfs.FilesMv(ctx, s.getAbsPath(src), s.getAbsPath(dst))
 }
 
 func (s *Storage) read(ctx context.Context, path string, w io.Writer, opt pairStorageRead) (n int64, err error) {
-	panic("not implemented")
+	fileOpts := make([]ipfs.FilesOpt, 0)
+	if opt.HasOffset {
+		fileOpts = append(fileOpts, ipfs.FilesRead.Offset(opt.Offset))
+	}
+	if opt.HasSize {
+		fileOpts = append(fileOpts, ipfs.FilesRead.Count(opt.Size))
+	}
+	f, err := s.ipfs.FilesRead(ctx, s.getAbsPath(path), fileOpts...)
+	if err != nil {
+		return 0, err
+	}
+	if opt.HasIoCallback {
+		iowrap.CallbackReadCloser(f, opt.IoCallback)
+	}
+	return io.Copy(w, f)
 }
 
 func (s *Storage) stat(ctx context.Context, path string, opt pairStorageStat) (o *Object, err error) {
-	panic("not implemented")
+	rp := s.getAbsPath(path)
+	stat, err := s.ipfs.FilesStat(ctx, rp, ipfs.FilesStat.WithLocal(true))
+	if err != nil {
+		return nil, err
+	}
+	o = NewObject(s, true)
+	o.ID = stat.Hash
+	o.Path = path
+	if opt.HasObjectMode && opt.ObjectMode.IsDir() {
+		o.Mode |= ModeDir
+	} else {
+		o.Mode |= ModeRead
+	}
+	o.SetContentType(stat.Type)
+	o.SetContentLength(int64(stat.Size))
+
+	var sm ObjectSystemMetadata
+	sm.Hash = stat.Hash
+	sm.Blocks = stat.Blocks
+	sm.Local = stat.Local
+	sm.WithLocality = stat.WithLocality
+	sm.CumulativeSize = stat.CumulativeSize
+	sm.SizeLocal = stat.SizeLocal
+	o.SetSystemMetadata(sm)
+
+	return
 }
 
 func (s *Storage) write(ctx context.Context, path string, r io.Reader, size int64, opt pairStorageWrite) (n int64, err error) {
-	panic("not implemented")
+	err = s.ipfs.FilesWrite(
+		ctx, s.getAbsPath(path), r,
+		ipfs.FilesWrite.Create(true),
+		ipfs.FilesWrite.Parents(true),
+		ipfs.FilesWrite.Truncate(true),
+	)
+	if err != nil {
+		return 0, err
+	}
+	return size, nil
 }
