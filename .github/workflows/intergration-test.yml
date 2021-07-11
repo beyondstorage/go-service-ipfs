@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set up IPFS ${{ matrix.ipfs }}
-        uses: ibnesayeed/setup-ipfs@master
+        uses: ibnesayeed/setup-ipfs@f84d4bdcdb4e5ff7d6bc4c6cb28f117584a50538
         id: ipfs_setup
         with:
           ipfs_version: ${{ matrix.ipfs }}
@@ -34,5 +34,5 @@ jobs:
       - name: Test
         env:
           STORAGE_IPFS_INTEGRATION_TEST: ${{ secrets.STORAGE_INTEGRATION_TEST }}
-          STORAGE_IPFS_ENDPOINT: ${{ secrets.STORAGE_IPFS_ENDPOINT }}
+          STORAGE_IPFS_ENDPOINT: "http:127.0.0.1:5001"
         run: make integration_test
