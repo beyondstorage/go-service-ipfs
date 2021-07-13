@@ -2,6 +2,7 @@ package ipfs
 
 import (
 	"context"
+	"errors"
 	"io"
 
 	ipfs "github.com/ipfs/go-ipfs-api"
@@ -16,7 +17,23 @@ import (
 // This means that if the `workDir` is `/ipfs/`, there is a high probability that an error will be returned
 // See https://github.com/beyondstorage/specs/pull/134#discussion_r663594807 for more details
 func (s *Storage) copy(ctx context.Context, src string, dst string, opt pairStorageCopy) (err error) {
-	return s.ipfs.FilesCp(ctx, s.getAbsPath(src), s.getAbsPath(dst))
+	dst = s.getAbsPath(dst)
+
+	stat, err := s.ipfs.FilesStat(ctx, dst)
+	if err == nil {
+		if stat.Type == "directory" {
+			return services.ErrObjectModeInvalid
+		} else {
+			err = s.ipfs.FilesRm(ctx, dst, true)
+			if err != nil {
+				return err
+			}
+		}
+	} else if !errors.Is(formatError(err), services.ErrObjectNotExist) {
+		return err
+	}
+
+	return s.ipfs.FilesCp(ctx, s.getAbsPath(src), dst)
 }
 
 func (s *Storage) create(path string, opt pairStorageCreate) (o *Object) {
@@ -31,6 +48,21 @@ func (s *Storage) create(path string, opt pairStorageCreate) (o *Object) {
 	o.ID = s.getAbsPath(path)
 	o.Path = path
 	return o
+}
+
+func (s *Storage) createDir(ctx context.Context, path string, opt pairStorageCreateDir) (o *Object, err error) {
+	path = s.getAbsPath(path)
+
+	err = s.ipfs.FilesMkdir(ctx, path, ipfs.FilesMkdir.Parents(true))
+	if err != nil {
+		return nil, err
+	}
+
+	o = NewObject(s, true)
+	o.ID = path
+	o.Path = path
+	o.Mode = ModeDir
+	return
 }
 
 // GSP-46: Idempotent Storager Delete Operation
@@ -80,6 +112,17 @@ func (s *Storage) metadata(opt pairStorageMetadata) (meta *StorageMeta) {
 }
 
 func (s *Storage) move(ctx context.Context, src string, dst string, opt pairStorageMove) (err error) {
+	dst = s.getAbsPath(dst)
+
+	stat, err := s.ipfs.FilesStat(ctx, dst)
+	if err == nil {
+		if stat.Type == "directory" {
+			return services.ErrObjectModeInvalid
+		}
+	} else if !errors.Is(formatError(err), services.ErrObjectNotExist) {
+		return err
+	}
+
 	return s.ipfs.FilesMv(ctx, s.getAbsPath(src), s.getAbsPath(dst))
 }
 

@@ -163,6 +163,7 @@ var pairMap = map[string]string{
 }
 var (
 	_ Copier   = &Storage{}
+	_ Direr    = &Storage{}
 	_ Mover    = &Storage{}
 	_ Storager = &Storage{}
 )
@@ -174,6 +175,8 @@ type StorageFeatures struct {
 	LooseOperationCopy bool
 	// Deprecated: This field has been deprecated by GSP-109, planned be removed in v4.3.0.
 	LooseOperationCreate bool
+	// Deprecated: This field has been deprecated by GSP-109, planned be removed in v4.3.0.
+	LooseOperationCreateDir bool
 	// Deprecated: This field has been deprecated by GSP-109, planned be removed in v4.3.0.
 	LooseOperationDelete bool
 	// Deprecated: This field has been deprecated by GSP-109, planned be removed in v4.3.0.
@@ -257,15 +260,16 @@ func parsePairStorageNew(opts []Pair) (pairStorageNew, error) {
 
 // DefaultStoragePairs is default pairs for specific action
 type DefaultStoragePairs struct {
-	Copy     []Pair
-	Create   []Pair
-	Delete   []Pair
-	List     []Pair
-	Metadata []Pair
-	Move     []Pair
-	Read     []Pair
-	Stat     []Pair
-	Write    []Pair
+	Copy      []Pair
+	Create    []Pair
+	CreateDir []Pair
+	Delete    []Pair
+	List      []Pair
+	Metadata  []Pair
+	Move      []Pair
+	Read      []Pair
+	Stat      []Pair
+	Write     []Pair
 }
 
 // pairStorageCopy is the parsed struct
@@ -315,6 +319,29 @@ func (s *Storage) parsePairStorageCreate(opts []Pair) (pairStorageCreate, error)
 			continue
 		default:
 			return pairStorageCreate{}, services.PairUnsupportedError{Pair: v}
+		}
+	}
+
+	// Check required pairs.
+
+	return result, nil
+}
+
+// pairStorageCreateDir is the parsed struct
+type pairStorageCreateDir struct {
+	pairs []Pair
+}
+
+// parsePairStorageCreateDir will parse Pair slice into *pairStorageCreateDir
+func (s *Storage) parsePairStorageCreateDir(opts []Pair) (pairStorageCreateDir, error) {
+	result := pairStorageCreateDir{
+		pairs: opts,
+	}
+
+	for _, v := range opts {
+		switch v.Key {
+		default:
+			return pairStorageCreateDir{}, services.PairUnsupportedError{Pair: v}
 		}
 	}
 
@@ -606,6 +633,31 @@ func (s *Storage) Create(path string, pairs ...Pair) (o *Object) {
 	opt, _ = s.parsePairStorageCreate(pairs)
 
 	return s.create(path, opt)
+}
+
+// CreateDir will create a new dir object.
+//
+// This function will create a context by default.
+func (s *Storage) CreateDir(path string, pairs ...Pair) (o *Object, err error) {
+	ctx := context.Background()
+	return s.CreateDirWithContext(ctx, path, pairs...)
+}
+
+// CreateDirWithContext will create a new dir object.
+func (s *Storage) CreateDirWithContext(ctx context.Context, path string, pairs ...Pair) (o *Object, err error) {
+	defer func() {
+		err = s.formatError("create_dir", err, path)
+	}()
+
+	pairs = append(pairs, s.defaultPairs.CreateDir...)
+	var opt pairStorageCreateDir
+
+	opt, err = s.parsePairStorageCreateDir(pairs)
+	if err != nil {
+		return
+	}
+
+	return s.createDir(ctx, path, opt)
 }
 
 // Delete will delete an object from service.
