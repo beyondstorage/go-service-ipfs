@@ -75,7 +75,7 @@ func (s *Storage) delete(ctx context.Context, path string, opt pairStorageDelete
 func (s *Storage) list(ctx context.Context, path string, opt pairStorageList) (oi *ObjectIterator, err error) {
 	rp := s.getAbsPath(path)
 
-	if opt.ListMode.IsDir() {
+	if !opt.HasListMode || opt.ListMode.IsDir() {
 		nextFn := func(ctx context.Context, page *ObjectPage) error {
 			dir, err := s.ipfs.FilesLs(ctx, rp, ipfs.FilesLs.Stat(true))
 			if err != nil {
