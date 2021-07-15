@@ -3,7 +3,9 @@
 - RFC PR: [beyondstorage/go-service-ipfs#13](https://github.com/beyondstorage/go-service-ipfs/pull/13)
 - Tracking Issue: [beyondstorage/go-service-ipfs#14](https://github.com/beyondstorage/go-service-ipfs/issues/14)
 
-# RFC-1: Add a pair for `Reacher`
+# RFC-13: Add Gateway Pair
+
+Releated issue: [beyondstorage/go-service-ipfs#5](https://github.com/beyondstorage/go-service-ipfs/issues/5)
 
 ## Background
 
@@ -12,8 +14,6 @@ With IPFS, we can get the `CID` of an object, then we can use it with a public o
 When using internal gateway like `127.0.0.1:8080`, the access link are inaccessible from external network.
 
 When using a public gateway, e.g. `ipfs.io`, `cf-ipfs.com`, if the service is an intranet IPFS cluster, it is possible that the files are not accessible from these public gateway as well.
-
-Releated issue: [beyondstorage/go-service-ipfs#5](https://github.com/beyondstorage/go-service-ipfs/issues/5)
 
 ### How to get the `CID` of an object?
 
@@ -36,6 +36,11 @@ Type: file
 ## Proposal
 
 I propose to add a pair to let the user specify the `gateway`.
+
+- The `type` of `gateway` should be `String`
+- The `format` of `gateway` should follow [go-endpoint](https://github.com/beyondstorage/go-endpoint/blob/master/README.md)
+- The `value` of `gateway` should be parsed into `HTTP` or `HTTPS`
+- Now we use `gateway` only in `Reach` operation
 
 ## Rationale
 

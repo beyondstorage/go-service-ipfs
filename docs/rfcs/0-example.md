@@ -1,7 +1,7 @@
-- Author: (fill me in with `name <mail>`, e.g., Xuanwo <github@xuanwo.io>)
+- Author: (fill me in with `name <mail>`, e.g., zu1k <i@lgf.im>)
 - Start Date: (fill me in with today's date, YYYY-MM-DD)
-- RFC PR: [beyondstorage/beyond-fs#0](https://github.com/beyondstorage/beyond-fs/issues/0)
-- Tracking Issue: [beyondstorage/beyond-fs#0](https://github.com/beyondstorage/beyond-fs/issues/0)
+- RFC PR: [beyondstorage/go-service-ipfs#0](https://github.com/beyondstorage/go-service-ipfs/issues/0)
+- Tracking Issue: [beyondstorage/go-service-ipfs#0](https://github.com/beyondstorage/go-service-ipfs/issues/0)
 
 # RFC-0: <proposal name>
 
