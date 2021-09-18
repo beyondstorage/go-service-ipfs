@@ -35,4 +35,5 @@ jobs:
         env:
           STORAGE_IPFS_INTEGRATION_TEST: ${{ secrets.STORAGE_INTEGRATION_TEST }}
           STORAGE_IPFS_ENDPOINT: "http:127.0.0.1:5001"
+          STORAGE_IPFS_GATEWAY: "http:127.0.0.1:8080"
         run: make integration_test

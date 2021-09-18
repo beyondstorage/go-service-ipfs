@@ -90,6 +90,16 @@ func WithDefaultStoragePairs(v DefaultStoragePairs) Pair {
 	}
 }
 
+// WithGateway will apply gateway value to Options.
+//
+// Gateway set storage gateway, for http(s) request purpose
+func WithGateway(v string) Pair {
+	return Pair{
+		Key:   "gateway",
+		Value: v,
+	}
+}
+
 // WithStorageFeatures will apply storage_features value to Options.
 //
 // StorageFeatures set storage features
@@ -111,6 +121,7 @@ var pairMap = map[string]string{
 	"default_storage_pairs": "DefaultStoragePairs",
 	"endpoint":              "string",
 	"expire":                "time.Duration",
+	"gateway":               "string",
 	"http_client_options":   "*httpclient.Options",
 	"interceptor":           "Interceptor",
 	"io_callback":           "func([]byte)",
@@ -125,10 +136,11 @@ var pairMap = map[string]string{
 	"work_dir":              "string",
 }
 var (
-	_ Copier   = &Storage{}
-	_ Direr    = &Storage{}
-	_ Mover    = &Storage{}
-	_ Storager = &Storage{}
+	_ Copier            = &Storage{}
+	_ Direr             = &Storage{}
+	_ Mover             = &Storage{}
+	_ StorageHTTPSigner = &Storage{}
+	_ Storager          = &Storage{}
 )
 
 type StorageFeatures struct {
@@ -141,6 +153,8 @@ type pairStorageNew struct {
 	// Required pairs
 	HasEndpoint bool
 	Endpoint    string
+	HasGateway  bool
+	Gateway     string
 	// Optional pairs
 	HasDefaultStoragePairs bool
 	DefaultStoragePairs    DefaultStoragePairs
@@ -171,6 +185,12 @@ func parsePairStorageNew(opts []Pair) (pairStorageNew, error) {
 			}
 			result.HasEndpoint = true
 			result.Endpoint = v.Value.(string)
+		case "gateway":
+			if result.HasGateway {
+				continue
+			}
+			result.HasGateway = true
+			result.Gateway = v.Value.(string)
 		// Optional pairs
 		case "default_storage_pairs":
 			if result.HasDefaultStoragePairs {
@@ -223,22 +243,27 @@ func parsePairStorageNew(opts []Pair) (pairStorageNew, error) {
 	if !result.HasEndpoint {
 		return pairStorageNew{}, services.PairRequiredError{Keys: []string{"endpoint"}}
 	}
+	if !result.HasGateway {
+		return pairStorageNew{}, services.PairRequiredError{Keys: []string{"gateway"}}
+	}
 
 	return result, nil
 }
 
 // DefaultStoragePairs is default pairs for specific action
 type DefaultStoragePairs struct {
-	Copy      []Pair
-	Create    []Pair
-	CreateDir []Pair
-	Delete    []Pair
-	List      []Pair
-	Metadata  []Pair
-	Move      []Pair
-	Read      []Pair
-	Stat      []Pair
-	Write     []Pair
+	Copy               []Pair
+	Create             []Pair
+	CreateDir          []Pair
+	Delete             []Pair
+	List               []Pair
+	Metadata           []Pair
+	Move               []Pair
+	QuerySignHTTPRead  []Pair
+	QuerySignHTTPWrite []Pair
+	Read               []Pair
+	Stat               []Pair
+	Write              []Pair
 }
 
 // pairStorageCopy is the parsed struct
@@ -421,6 +446,52 @@ func (s *Storage) parsePairStorageMove(opts []Pair) (pairStorageMove, error) {
 		switch v.Key {
 		default:
 			return pairStorageMove{}, services.PairUnsupportedError{Pair: v}
+		}
+	}
+
+	// Check required pairs.
+
+	return result, nil
+}
+
+// pairStorageQuerySignHTTPRead is the parsed struct
+type pairStorageQuerySignHTTPRead struct {
+	pairs []Pair
+}
+
+// parsePairStorageQuerySignHTTPRead will parse Pair slice into *pairStorageQuerySignHTTPRead
+func (s *Storage) parsePairStorageQuerySignHTTPRead(opts []Pair) (pairStorageQuerySignHTTPRead, error) {
+	result := pairStorageQuerySignHTTPRead{
+		pairs: opts,
+	}
+
+	for _, v := range opts {
+		switch v.Key {
+		default:
+			return pairStorageQuerySignHTTPRead{}, services.PairUnsupportedError{Pair: v}
+		}
+	}
+
+	// Check required pairs.
+
+	return result, nil
+}
+
+// pairStorageQuerySignHTTPWrite is the parsed struct
+type pairStorageQuerySignHTTPWrite struct {
+	pairs []Pair
+}
+
+// parsePairStorageQuerySignHTTPWrite will parse Pair slice into *pairStorageQuerySignHTTPWrite
+func (s *Storage) parsePairStorageQuerySignHTTPWrite(opts []Pair) (pairStorageQuerySignHTTPWrite, error) {
+	result := pairStorageQuerySignHTTPWrite{
+		pairs: opts,
+	}
+
+	for _, v := range opts {
+		switch v.Key {
+		default:
+			return pairStorageQuerySignHTTPWrite{}, services.PairUnsupportedError{Pair: v}
 		}
 	}
 
@@ -791,6 +862,56 @@ func (s *Storage) MoveWithContext(ctx context.Context, src string, dst string, p
 	}
 
 	return s.move(ctx, src, dst, opt)
+}
+
+// QuerySignHTTPRead will read data from the file by using query parameters to authenticate requests.
+//
+// This function will create a context by default.
+func (s *Storage) QuerySignHTTPRead(path string, expire time.Duration, pairs ...Pair) (req *http.Request, err error) {
+	ctx := context.Background()
+	return s.QuerySignHTTPReadWithContext(ctx, path, expire, pairs...)
+}
+
+// QuerySignHTTPReadWithContext will read data from the file by using query parameters to authenticate requests.
+func (s *Storage) QuerySignHTTPReadWithContext(ctx context.Context, path string, expire time.Duration, pairs ...Pair) (req *http.Request, err error) {
+	defer func() {
+		err = s.formatError("query_sign_http_read", err, path)
+	}()
+
+	pairs = append(pairs, s.defaultPairs.QuerySignHTTPRead...)
+	var opt pairStorageQuerySignHTTPRead
+
+	opt, err = s.parsePairStorageQuerySignHTTPRead(pairs)
+	if err != nil {
+		return
+	}
+
+	return s.querySignHTTPRead(ctx, path, expire, opt)
+}
+
+// QuerySignHTTPWrite will write data into a file by using query parameters to authenticate requests.
+//
+// This function will create a context by default.
+func (s *Storage) QuerySignHTTPWrite(path string, size int64, expire time.Duration, pairs ...Pair) (req *http.Request, err error) {
+	ctx := context.Background()
+	return s.QuerySignHTTPWriteWithContext(ctx, path, size, expire, pairs...)
+}
+
+// QuerySignHTTPWriteWithContext will write data into a file by using query parameters to authenticate requests.
+func (s *Storage) QuerySignHTTPWriteWithContext(ctx context.Context, path string, size int64, expire time.Duration, pairs ...Pair) (req *http.Request, err error) {
+	defer func() {
+		err = s.formatError("query_sign_http_write", err, path)
+	}()
+
+	pairs = append(pairs, s.defaultPairs.QuerySignHTTPWrite...)
+	var opt pairStorageQuerySignHTTPWrite
+
+	opt, err = s.parsePairStorageQuerySignHTTPWrite(pairs)
+	if err != nil {
+		return
+	}
+
+	return s.querySignHTTPWrite(ctx, path, size, expire, opt)
 }
 
 // Read will read the file's data.

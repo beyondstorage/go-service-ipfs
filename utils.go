@@ -23,11 +23,13 @@ type Storage struct {
 	features     StorageFeatures
 
 	workDir string
+	gateway string
 
 	types.UnimplementedStorager
 	types.UnimplementedCopier
 	types.UnimplementedMover
 	types.UnimplementedDirer
+	types.UnimplementedStorageHTTPSigner
 }
 
 // String implements Storager.String
@@ -53,7 +55,6 @@ func NewStorager(pairs ...types.Pair) (types.Storager, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	var e string
 	switch ep.Protocol() {
 	case endpoint.ProtocolHTTP:
@@ -62,6 +63,19 @@ func NewStorager(pairs ...types.Pair) (types.Storager, error) {
 		e, _, _ = ep.HTTPS()
 	default:
 		return nil, services.PairUnsupportedError{Pair: ps.WithEndpoint(opt.Endpoint)}
+	}
+
+	gate, err := endpoint.Parse(opt.Gateway)
+	if err != nil {
+		return nil, err
+	}
+	switch gate.Protocol() {
+	case endpoint.ProtocolHTTP:
+		st.gateway, _, _ = gate.HTTP()
+	case endpoint.ProtocolHTTPS:
+		st.gateway, _, _ = gate.HTTPS()
+	default:
+		return nil, services.PairUnsupportedError{Pair: WithGateway(opt.Gateway)}
 	}
 
 	sh := ipfs.NewShell(e)
