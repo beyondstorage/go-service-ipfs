@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"io"
-
-	ipfs "github.com/ipfs/go-ipfs-api"
+	"net/http"
+	"time"
 
 	"github.com/beyondstorage/go-storage/v4/pkg/iowrap"
 	"github.com/beyondstorage/go-storage/v4/services"
 	. "github.com/beyondstorage/go-storage/v4/types"
+	ipfs "github.com/ipfs/go-ipfs-api"
 )
 
 // The src of `ipfs files cp` supports both `IPFS-path` and `MFS-path`
@@ -18,7 +19,6 @@ import (
 // See https://github.com/beyondstorage/specs/pull/134#discussion_r663594807 for more details
 func (s *Storage) copy(ctx context.Context, src string, dst string, opt pairStorageCopy) (err error) {
 	dst = s.getAbsPath(dst)
-
 	stat, err := s.ipfs.FilesStat(ctx, dst)
 	if err == nil {
 		if stat.Type == "directory" {
@@ -32,7 +32,6 @@ func (s *Storage) copy(ctx context.Context, src string, dst string, opt pairStor
 	} else if !errors.Is(formatError(err), services.ErrObjectNotExist) {
 		return err
 	}
-
 	return s.ipfs.FilesCp(ctx, s.getAbsPath(src), dst)
 }
 
@@ -52,12 +51,10 @@ func (s *Storage) create(path string, opt pairStorageCreate) (o *Object) {
 
 func (s *Storage) createDir(ctx context.Context, path string, opt pairStorageCreateDir) (o *Object, err error) {
 	path = s.getAbsPath(path)
-
 	err = s.ipfs.FilesMkdir(ctx, path, ipfs.FilesMkdir.Parents(true))
 	if err != nil {
 		return nil, err
 	}
-
 	o = NewObject(s, true)
 	o.ID = path
 	o.Path = path
@@ -74,7 +71,6 @@ func (s *Storage) delete(ctx context.Context, path string, opt pairStorageDelete
 
 func (s *Storage) list(ctx context.Context, path string, opt pairStorageList) (oi *ObjectIterator, err error) {
 	rp := s.getAbsPath(path)
-
 	if !opt.HasListMode || opt.ListMode.IsDir() {
 		nextFn := func(ctx context.Context, page *ObjectPage) error {
 			dir, err := s.ipfs.FilesLs(ctx, rp, ipfs.FilesLs.Stat(true))
@@ -85,14 +81,12 @@ func (s *Storage) list(ctx context.Context, path string, opt pairStorageList) (o
 				o := NewObject(s, true)
 				o.ID = f.Hash
 				o.Path = f.Name
-
 				switch f.Type {
 				case ipfs.TFile:
 					o.Mode |= ModeRead
 				case ipfs.TDirectory:
 					o.Mode |= ModeDir
 				}
-
 				o.SetContentLength(int64(f.Size))
 				page.Data = append(page.Data, o)
 			}
@@ -113,7 +107,6 @@ func (s *Storage) metadata(opt pairStorageMetadata) (meta *StorageMeta) {
 
 func (s *Storage) move(ctx context.Context, src string, dst string, opt pairStorageMove) (err error) {
 	dst = s.getAbsPath(dst)
-
 	stat, err := s.ipfs.FilesStat(ctx, dst)
 	if err == nil {
 		if stat.Type == "directory" {
@@ -122,8 +115,24 @@ func (s *Storage) move(ctx context.Context, src string, dst string, opt pairStor
 	} else if !errors.Is(formatError(err), services.ErrObjectNotExist) {
 		return err
 	}
-
 	return s.ipfs.FilesMv(ctx, s.getAbsPath(src), s.getAbsPath(dst))
+}
+
+func (s *Storage) querySignHTTPRead(ctx context.Context, path string, expire time.Duration, opt pairStorageQuerySignHTTPRead) (req *http.Request, err error) {
+	rp := s.getAbsPath(path)
+	stat, err := s.ipfs.FilesStat(ctx, rp, ipfs.FilesStat.WithLocal(true))
+	if err != nil {
+		return nil, err
+	}
+	if stat.Type != "file" {
+		return nil, errors.New("path not a file")
+	}
+
+	return http.NewRequest(http.MethodGet, s.gateway+"/ipfs/"+stat.Hash, nil)
+}
+
+func (s *Storage) querySignHTTPWrite(ctx context.Context, path string, size int64, expire time.Duration, opt pairStorageQuerySignHTTPWrite) (req *http.Request, err error) {
+	panic("not implemented")
 }
 
 func (s *Storage) read(ctx context.Context, path string, w io.Writer, opt pairStorageRead) (n int64, err error) {
@@ -160,7 +169,6 @@ func (s *Storage) stat(ctx context.Context, path string, opt pairStorageStat) (o
 	}
 	o.SetContentType(stat.Type)
 	o.SetContentLength(int64(stat.Size))
-
 	var sm ObjectSystemMetadata
 	sm.Hash = stat.Hash
 	sm.Blocks = stat.Blocks
@@ -169,7 +177,6 @@ func (s *Storage) stat(ctx context.Context, path string, opt pairStorageStat) (o
 	sm.CumulativeSize = stat.CumulativeSize
 	sm.SizeLocal = stat.SizeLocal
 	o.SetSystemMetadata(sm)
-
 	return
 }
 

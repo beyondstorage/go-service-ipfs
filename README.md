@@ -23,7 +23,7 @@ import (
 )
 
 func main() {
-	store, err := services.NewStoragerFromString("ipfs:///path/to/workdir?endpoint=<ipfs_http_api_endpoint>")
+	store, err := services.NewStoragerFromString("ipfs:///path/to/workdir?endpoint=<ipfs_http_api_endpoint>&gateway=<ipfs_http_gateway>")
 	if err != nil {
 		log.Fatal(err)
 	}

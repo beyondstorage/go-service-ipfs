@@ -1,10 +1,10 @@
 name = "ipfs"
 
 [namespace.storage]
-implement = ["copier", "mover", "direr"]
+implement = ["copier", "mover", "direr", "storage_http_signer"]
 
 [namespace.storage.new]
-required = ["endpoint"]
+required = ["endpoint", "gateway"]
 optional = ["storage_features", "default_storage_pairs", "work_dir"]
 
 [namespace.storage.op.create]
@@ -24,6 +24,10 @@ optional = ["object_mode"]
 
 [namespace.storage.op.stat]
 optional = ["object_mode"]
+
+[pairs.gateway]
+type = "string"
+description = "set storage gateway, for http(s) request purpose"
 
 [pairs.storage_features]
 type = "StorageFeatures"

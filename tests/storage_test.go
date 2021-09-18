@@ -27,3 +27,10 @@ func TestMover(t *testing.T) {
 	}
 	tests.TestMover(t, setupTest(t))
 }
+
+func TestStorageHttpSignerRead(t *testing.T) {
+	if os.Getenv("STORAGE_IPFS_INTEGRATION_TEST") != "on" {
+		t.Skipf("STORAGE_IPFS_INTEGRATION_TEST is not 'on', skipped")
+	}
+	tests.TestStorageHTTPSignerRead(t, setupTest(t))
+}
