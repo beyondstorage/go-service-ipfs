@@ -1,6 +1,7 @@
 package ipfs
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"io"
@@ -181,11 +182,19 @@ func (s *Storage) stat(ctx context.Context, path string, opt pairStorageStat) (o
 }
 
 func (s *Storage) write(ctx context.Context, path string, r io.Reader, size int64, opt pairStorageWrite) (n int64, err error) {
+	if r == nil {
+		if size > 0 {
+			return 0, errors.New("size is not 0 when io.Reader is nil")
+		}
+		r = bytes.NewReader([]byte{})
+	}
+
 	err = s.ipfs.FilesWrite(
 		ctx, s.getAbsPath(path), r,
 		ipfs.FilesWrite.Create(true),
 		ipfs.FilesWrite.Parents(true),
 		ipfs.FilesWrite.Truncate(true),
+		ipfs.FilesWrite.Count(size),
 	)
 	if err != nil {
 		return 0, err
