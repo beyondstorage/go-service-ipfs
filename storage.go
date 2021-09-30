@@ -119,6 +119,10 @@ func (s *Storage) move(ctx context.Context, src string, dst string, opt pairStor
 	return s.ipfs.FilesMv(ctx, s.getAbsPath(src), s.getAbsPath(dst))
 }
 
+func (s *Storage) querySignHTTPDelete(ctx context.Context, path string, expire time.Duration, opt pairStorageQuerySignHTTPDelete) (req *http.Request, err error) {
+	panic("not implemented")
+}
+
 func (s *Storage) querySignHTTPRead(ctx context.Context, path string, expire time.Duration, opt pairStorageQuerySignHTTPRead) (req *http.Request, err error) {
 	rp := s.getAbsPath(path)
 	stat, err := s.ipfs.FilesStat(ctx, rp, ipfs.FilesStat.WithLocal(true))
