@@ -192,6 +192,7 @@ func (s *Storage) write(ctx context.Context, path string, r io.Reader, size int6
 		}
 		r = bytes.NewReader([]byte{})
 	}
+	r = io.LimitReader(r, size)
 
 	if opt.HasIoCallback {
 		r = iowrap.CallbackReader(r, opt.IoCallback)
