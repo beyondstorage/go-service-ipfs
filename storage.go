@@ -119,6 +119,10 @@ func (s *Storage) move(ctx context.Context, src string, dst string, opt pairStor
 	return s.ipfs.FilesMv(ctx, s.getAbsPath(src), s.getAbsPath(dst))
 }
 
+func (s *Storage) querySignHTTPDelete(ctx context.Context, path string, expire time.Duration, opt pairStorageQuerySignHTTPDelete) (req *http.Request, err error) {
+	panic("not implemented")
+}
+
 func (s *Storage) querySignHTTPRead(ctx context.Context, path string, expire time.Duration, opt pairStorageQuerySignHTTPRead) (req *http.Request, err error) {
 	rp := s.getAbsPath(path)
 	stat, err := s.ipfs.FilesStat(ctx, rp, ipfs.FilesStat.WithLocal(true))
@@ -149,7 +153,7 @@ func (s *Storage) read(ctx context.Context, path string, w io.Writer, opt pairSt
 		return 0, err
 	}
 	if opt.HasIoCallback {
-		iowrap.CallbackReadCloser(f, opt.IoCallback)
+		f = iowrap.CallbackReadCloser(f, opt.IoCallback)
 	}
 	return io.Copy(w, f)
 }
@@ -187,6 +191,10 @@ func (s *Storage) write(ctx context.Context, path string, r io.Reader, size int6
 			return 0, errors.New("size is not 0 when io.Reader is nil")
 		}
 		r = bytes.NewReader([]byte{})
+	}
+
+	if opt.HasIoCallback {
+		r = iowrap.CallbackReader(r, opt.IoCallback)
 	}
 
 	err = s.ipfs.FilesWrite(

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	ipfs "github.com/ipfs/go-ipfs-api"
 	cmds "github.com/ipfs/go-ipfs-cmds"
@@ -48,6 +49,9 @@ func NewStorager(pairs ...types.Pair) (types.Storager, error) {
 		workDir: "/",
 	}
 	if opt.HasWorkDir {
+		if !strings.HasSuffix(opt.WorkDir, "/") {
+			opt.WorkDir += "/"
+		}
 		st.workDir = opt.WorkDir
 	}
 
@@ -128,6 +132,8 @@ func (s *Storage) formatError(op string, err error, path ...string) error {
 
 // getAbsPath will calculate object storage's abs path
 func (s *Storage) getAbsPath(path string) string {
+	path = strings.ReplaceAll(path, "\\", "/")
+
 	if filepath.IsAbs(path) {
 		return path
 	}
